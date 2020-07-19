@@ -13,6 +13,7 @@ OpenGLWidget::OpenGLWidget(QWidget* parent) : QOpenGLWidget(parent) {
 }
 
 OpenGLWidget::~OpenGLWidget() {
+    makeCurrent();
     glDeleteVertexArrays(1, &frame_vao);
     glDeleteBuffers(1, &frame_vbo);
 }

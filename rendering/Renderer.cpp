@@ -20,6 +20,11 @@ uint32_t round_up_to_pow_2(uint32_t x) {
 
 Renderer::Renderer(QObject* parent) : QObject(parent) {}
 
+Renderer::~Renderer() {
+    glDeleteBuffers(1, &vertex_ssbo);
+    glDeleteBuffers(1, &index_ssbo);
+}
+
 void Renderer::initialize(unsigned int width, unsigned int height) {
     initializeOpenGLFunctions();
 

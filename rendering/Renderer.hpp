@@ -15,6 +15,7 @@ class Renderer : public QObject, protected QOpenGLFunctions_4_5_Core {
 
 public:
     Renderer(QObject* parent=nullptr);
+    ~Renderer();
     void initialize(unsigned int width, unsigned int height);
     void resize(unsigned int width, unsigned int height);
 

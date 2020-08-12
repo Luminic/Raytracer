@@ -11,7 +11,7 @@ CONFIG += debug
 OBJECTS_DIR = generated_files
 MOC_DIR = generated_files
 
-INCLUDEPATH += .
+INCLUDEPATH += . ./src/rendering ./src/materials ./src/scene
 
 # You can make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -23,22 +23,22 @@ DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs depr
 # Input
 HEADERS +=  src/MainWindow.hpp \
 			src/Viewport.hpp \
-			src/CameraController.hpp \
 			src/rendering/OpenGLWidget.hpp \
-			src/rendering/Camera.hpp \
+			src/rendering/Renderer.hpp \
 			src/rendering/Shader.hpp \
-			src/rendering/Texture.hpp \
+			src/rendering/Camera.hpp \
+			src/rendering/CameraController.hpp \
 			src/rendering/Vertex.hpp \
-			src/rendering/Renderer.hpp
+			src/materials/Texture.hpp
 			
 
 SOURCES +=  src/main.cpp \
 			src/MainWindow.cpp \
 			src/Viewport.cpp \
-			src/CameraController.cpp \
 			src/rendering/OpenGLWidget.cpp \
-			src/rendering/Camera.cpp \
+			src/rendering/Renderer.cpp \
 			src/rendering/Shader.cpp \
-			src/rendering/Texture.cpp \
+			src/rendering/Camera.cpp \
+			src/rendering/CameraController.cpp \
 			src/rendering/Vertex.cpp \
-			src/rendering/Renderer.cpp
+			src/materials/Texture.cpp

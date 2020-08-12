@@ -6,7 +6,7 @@
 
 #include <glm/glm.hpp>
 
-#include "rendering/Camera.hpp"
+#include "Camera.hpp"
 
 
 struct Movement {

@@ -66,9 +66,9 @@ void Renderer::initialize(unsigned int width, unsigned int height) {
     if (vertex_is_opengl_compatible) {
         glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(vertices[0])*vertices.size(), vertices.data(), GL_STATIC_DRAW);
     } else {
-        std::vector<unsigned char> vertex_data(VERTEX_STRUCT_SIZE_IN_OPENGL*vertices.size());
+        std::vector<unsigned char> vertex_data(vertex_struct_size_in_opengl*vertices.size());
         for (unsigned int i=0; i<vertices.size(); i++) {
-            vertices[i].as_byte_array(&vertex_data[i*VERTEX_STRUCT_SIZE_IN_OPENGL]);
+            vertices[i].as_byte_array(&vertex_data[i*vertex_struct_size_in_opengl]);
         }
         glBufferData(GL_SHADER_STORAGE_BUFFER, vertex_data.size(), vertex_data.data(), GL_STATIC_DRAW);
     }

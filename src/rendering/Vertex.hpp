@@ -39,6 +39,8 @@ layout is what we expect
 
 The memory layout must exactly match the memory layout of the Vertex struct in GLSL
 */
+
+
 #define VERTEX_STRUCT_SIZE_IN_OPENGL 48
 constexpr bool vertex_is_opengl_compatible = (sizeof(Vertex) == VERTEX_STRUCT_SIZE_IN_OPENGL) && std::is_standard_layout<Vertex>::value;
 

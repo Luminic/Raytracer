@@ -8,6 +8,9 @@ TARGET = Raytracer
 QT += core gui widgets
 CONFIG += debug
 
+OBJECTS_DIR = generated_files
+MOC_DIR = generated_files
+
 INCLUDEPATH += .
 
 # You can make your code fail to compile if you use deprecated APIs.
@@ -18,11 +21,24 @@ INCLUDEPATH += .
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 # Input
-HEADERS += MainWindow.hpp Viewport.hpp CameraController.hpp \
-			rendering/OpenGLWidget.hpp rendering/Camera.hpp rendering/Shader.hpp \
-			rendering/Texture.hpp rendering/Vertex.hpp rendering/Renderer.hpp
+HEADERS +=  src/MainWindow.hpp \
+			src/Viewport.hpp \
+			src/CameraController.hpp \
+			src/rendering/OpenGLWidget.hpp \
+			src/rendering/Camera.hpp \
+			src/rendering/Shader.hpp \
+			src/rendering/Texture.hpp \
+			src/rendering/Vertex.hpp \
+			src/rendering/Renderer.hpp
 			
 
-SOURCES += main.cpp MainWindow.cpp Viewport.cpp CameraController.cpp \
-			rendering/OpenGLWidget.cpp rendering/Camera.cpp rendering/Shader.cpp \
-			rendering/Texture.cpp rendering/Vertex.cpp rendering/Renderer.cpp
+SOURCES +=  src/main.cpp \
+			src/MainWindow.cpp \
+			src/Viewport.cpp \
+			src/CameraController.cpp \
+			src/rendering/OpenGLWidget.cpp \
+			src/rendering/Camera.cpp \
+			src/rendering/Shader.cpp \
+			src/rendering/Texture.cpp \
+			src/rendering/Vertex.cpp \
+			src/rendering/Renderer.cpp

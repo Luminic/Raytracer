@@ -34,7 +34,7 @@ void Renderer::initialize(unsigned int width, unsigned int height) {
     camera.position = glm::vec3(0.0f,0.0f,5.0f);
 
     // Setup the render shader
-    ShaderStage comp_shader{GL_COMPUTE_SHADER, "rendering/shaders/raytrace.glsl"};
+    ShaderStage comp_shader{GL_COMPUTE_SHADER, "src/rendering/shaders/raytrace.glsl"};
 
     render_shader.load_shaders(&comp_shader, 1);
     render_shader.validate();

@@ -5,42 +5,40 @@
 
 #include <glm/glm.hpp>
 
-struct CornerRays {
-    glm::vec3 r00;
-    glm::vec3 r10;
-    glm::vec3 r01;
-    glm::vec3 r11;
-};
+#include "RaytracerGlobals.hpp"
 
-struct CameraDirectionVectors {
-    glm::vec3 front;
-    glm::vec3 right;
-    glm::vec3 up;
-};
+namespace Rt {
+
+    struct CornerRays {
+        glm::vec3 r00;
+        glm::vec3 r10;
+        glm::vec3 r01;
+        glm::vec3 r11;
+    };
+
+    struct CameraDirectionVectors {
+        glm::vec3 front;
+        glm::vec3 right;
+        glm::vec3 up;
+    };
 
 
-class Camera : public QObject {
-    Q_OBJECT;
+    class RAYTRACER_LIB_EXPORT AbstractCamera : public QObject {
+        Q_OBJECT;
 
-public:
-    glm::vec3 position;
-    glm::vec3 yaw_pitch_roll;
+    public:
+        AbstractCamera(QObject* parent=nullptr) : QObject(parent) {}
+        virtual ~AbstractCamera() {};
 
-    Camera(float aspect_ratio=1.0f, float fov=45.0f, QObject* parent=nullptr);
-    ~Camera();
+        virtual glm::vec3 get_position() = 0;
 
-    void update_perspective_matrix(float new_aspect_ratio=0.0f, float new_fov=0.0f);
-    void update_view_matrix();
-    
-    CameraDirectionVectors get_camera_direction_vectors();
-    CornerRays get_corner_rays();
+        virtual void update_perspective(float new_aspect_ratio=0.0f) = 0;
+        virtual void update_view() = 0;
+        
+        virtual CameraDirectionVectors get_camera_direction_vectors() = 0;
+        virtual CornerRays get_corner_rays() = 0;
+    };
 
-private:
-    float aspect_ratio;
-    float fov;
-
-    glm::mat4 perspective;
-    glm::mat4 view;
-};
+}
 
 #endif

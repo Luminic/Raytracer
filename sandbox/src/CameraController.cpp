@@ -32,13 +32,13 @@ void CameraController::set_camera(Camera* camera) {
 }
 
 void CameraController::main_loop() {
-    camera->yaw_pitch_roll[0] += mouse_movement[0]*mouse_sensitivity;
-    camera->yaw_pitch_roll[1] -= mouse_movement[1]*mouse_sensitivity;
-    camera->yaw_pitch_roll[1] = glm::clamp(camera->yaw_pitch_roll[1], -89.0f, 89.0f);
+    camera->euler_angles[0] += mouse_movement[0]*mouse_sensitivity;
+    camera->euler_angles[1] -= mouse_movement[1]*mouse_sensitivity;
+    camera->euler_angles[1] = glm::clamp(camera->euler_angles[1], -89.0f, 89.0f);
     mouse_movement[0] = 0.0f;
     mouse_movement[1] = 0.0f;
 
-    CameraDirectionVectors cdv = camera->get_camera_direction_vectors();
+    Rt::CameraDirectionVectors cdv = camera->get_camera_direction_vectors();
     glm::vec3 current_movement(0.0f);
     if (movement.front) {
         current_movement += glm::normalize(glm::vec3(cdv.front.x, 0.0f, cdv.front.z));

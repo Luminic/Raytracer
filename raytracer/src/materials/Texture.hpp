@@ -4,27 +4,32 @@
 #include <QObject>
 #include <QOpenGLFunctions_4_5_Core>
 
+#include "RaytracerGlobals.hpp"
 
-class Texture : public QObject, protected QOpenGLFunctions_4_5_Core {
-    Q_OBJECT;
+namespace Rt {
 
-public:
-    Texture(QObject* parent=nullptr);
-    ~Texture();
+    class Texture : public QObject, protected QOpenGLFunctions_4_5_Core {
+        Q_OBJECT;
 
-    void load(const char* path);
-    void load(QImage img);
-    void create(unsigned int width, unsigned int height);
+    public:
+        Texture(QObject* parent=nullptr);
+        ~Texture();
 
-    // Warning: This WILL clear the image
-    void resize(unsigned int width, unsigned int height);
+        void load(const char* path);
+        void load(QImage img);
+        void create(unsigned int width, unsigned int height);
 
-    unsigned int get_id();
+        // Warning: This WILL clear the image
+        void resize(unsigned int width, unsigned int height);
 
-private:
-    void set_params(); // TODO: add sampler options and make public
+        unsigned int get_id();
 
-    unsigned int id;
-};
+    private:
+        void set_params(); // TODO: add sampler options and make public
+
+        unsigned int id;
+    };
+
+}
 
 #endif

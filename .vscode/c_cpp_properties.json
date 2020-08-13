@@ -9,10 +9,10 @@
                 "/usr/include/qt/QtWidgets",
                 "/usr/include/qt"
             ],
-            "defines": [],
+            "defines": ["MAKE_RAYTRACER_LIBRARY"],
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c11",
-            "cppStandard": "c++14",
+            "cppStandard": "c++17",
             "intelliSenseMode": "clang-x64"
         }
     ],

@@ -3,15 +3,16 @@
 
 #include <QWidget>
 
-#include "rendering/OpenGLWidget.hpp"
-#include "rendering/Renderer.hpp"
+#include <rendering/OpenGLWidget.hpp>
+#include <rendering/Renderer.hpp>
 #include "CameraController.hpp"
 
 class Viewport : public QWidget {
     Q_OBJECT;
 
 public:
-    Viewport(QWidget* parent=nullptr);
+
+    Viewport(Camera* camera, CameraController* cam_controller, QWidget* parent=nullptr);
     ~Viewport();
 
     void main_loop();
@@ -22,14 +23,17 @@ protected:
     void mouseMoveEvent(QMouseEvent* event) override;
 
 private:
+    void init();
+
     void capture_mouse();
     void release_mouse();
 
-    OpenGLWidget gl_widget;
-    Renderer* renderer;
+    Rt::OpenGLWidget gl_widget;
+    Rt::Renderer* renderer;
 
-    CameraController cam_controller;
     bool mouse_captured;
+    Camera* camera;
+    CameraController* cam_controller;
 };
 
 #endif

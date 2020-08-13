@@ -4,31 +4,40 @@
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions_4_5_Core>
 
+#include "RaytracerGlobals.hpp"
+
 #include <vector>
 
-#include "Shader.hpp"
-#include "Texture.hpp"
 #include "Renderer.hpp"
+#include "Shader.hpp"
+#include "materials/Texture.hpp"
 
-class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions_4_5_Core {
-    Q_OBJECT;
+namespace Rt {
 
-public:
-    OpenGLWidget(QWidget* parent=nullptr);
-    ~OpenGLWidget();
+    class RAYTRACER_LIB_EXPORT OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions_4_5_Core {
+        Q_OBJECT;
 
-    void initializeGL() override;
-    void resizeGL(int w, int h) override;
-    void paintGL() override;
+    public:
+        OpenGLWidget(QWidget* parent=nullptr);
+        ~OpenGLWidget();
 
-    Renderer* get_renderer();
+        void initializeGL() override;
+        void resizeGL(int w, int h) override;
+        void paintGL() override;
 
-private:
-    unsigned int frame_vbo;
-    unsigned int frame_vao;
-    Shader frame_shader;
+        void main_loop();
 
-    Renderer renderer;
-};
+        Renderer* get_renderer();
+
+    private:
+        unsigned int frame_vbo;
+        unsigned int frame_vao;
+        Shader frame_shader;
+
+        Renderer renderer;
+        Texture* render_result;
+    };
+
+}
 
 #endif

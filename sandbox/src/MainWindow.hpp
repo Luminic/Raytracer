@@ -5,6 +5,8 @@
 #include <QTimer>
 
 #include "Viewport.hpp"
+#include "Camera.hpp"
+#include "CameraController.hpp"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT;
@@ -18,6 +20,8 @@ private:
 
     QTimer timer;
 
+    Camera camera;
+    CameraController camera_controller;
     Viewport viewport;
 };
 

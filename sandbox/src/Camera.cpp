@@ -2,41 +2,43 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-
 Camera::Camera(float aspect_ratio, float fov, QObject* parent) :
-    QObject(parent),
+    Rt::AbstractCamera(parent),
     aspect_ratio(aspect_ratio),
     fov(fov)
 {
     position = glm::vec3(0.0f);
-    yaw_pitch_roll = glm::vec3(0.0f);
+    euler_angles = glm::vec3(0.0f);
 
     perspective = glm::infinitePerspective(fov, aspect_ratio, 0.1f);
 }
 
 Camera::~Camera() {}
 
-void Camera::update_perspective_matrix(float new_aspect_ratio, float new_fov) {
-    if (new_fov != 0.0f) fov = new_fov;
+glm::vec3 Camera::get_position() {
+    return position;
+}
+
+void Camera::update_perspective(float new_aspect_ratio) {
     if (new_aspect_ratio != 0.0f) aspect_ratio = new_aspect_ratio;
     perspective = glm::infinitePerspective(fov, aspect_ratio, 0.1f);
 }
 
-void Camera::update_view_matrix() {
-    CameraDirectionVectors cam_vecs = get_camera_direction_vectors();
+void Camera::update_view() {
+    Rt::CameraDirectionVectors cam_vecs = get_camera_direction_vectors();
     view = glm::lookAt(position, position + cam_vecs.front, cam_vecs.up);
 }
 
-CameraDirectionVectors Camera::get_camera_direction_vectors() {
-    float yaw = glm::radians(yaw_pitch_roll[0]);
-    float pitch = glm::radians(yaw_pitch_roll[1]);
-    // float roll = glm::radians(yaw_pitch_roll[2]);
+Rt::CameraDirectionVectors Camera::get_camera_direction_vectors() {
+    float yaw = glm::radians(euler_angles[0]);
+    float pitch = glm::radians(euler_angles[1]);
+    // float roll = glm::radians(euler_angles[2]);
 
-    CameraDirectionVectors cam_vecs;
+    Rt::CameraDirectionVectors cam_vecs;
 
     cam_vecs.front = glm::vec3(
-         sin(yaw) * cos(pitch),
-         sin(pitch),
+        sin(yaw) * cos(pitch),
+        sin(pitch),
         -cos(yaw) * cos(pitch)
     );
 
@@ -47,8 +49,8 @@ CameraDirectionVectors Camera::get_camera_direction_vectors() {
     return cam_vecs;
 }
 
-CornerRays Camera::get_corner_rays() {
-    CornerRays corner_rays;
+Rt::CornerRays Camera::get_corner_rays() {
+    Rt::CornerRays corner_rays;
     glm::mat4 inv_view_persp = glm::inverse(perspective*view);
     glm::vec4 tmp;
 

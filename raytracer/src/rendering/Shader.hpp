@@ -1,5 +1,5 @@
-#ifndef SHADER_HPP
-#define SHADER_HPP
+#ifndef RT_SHADER_HPP
+#define RT_SHADER_HPP
 
 #include <QObject>
 #include <QOpenGLFunctions_4_5_Core>
@@ -26,7 +26,7 @@ namespace Rt {
         void load_shaders(ShaderStage shaders[], unsigned int nr_shaders);
         bool validate();
 
-        unsigned int get_id();
+        unsigned int get_id() const;
 
         void set_bool(const char* name, bool value);
         void set_int(const char* name, int value);

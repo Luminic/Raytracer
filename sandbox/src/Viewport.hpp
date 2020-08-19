@@ -4,6 +4,7 @@
 #include <QWidget>
 
 #include <rendering/OpenGLWidget.hpp>
+#include <rendering/OpenGLFunctions.hpp>
 #include <rendering/Renderer.hpp>
 #include "CameraController.hpp"
 
@@ -16,6 +17,11 @@ public:
     ~Viewport();
 
     void main_loop();
+
+    Rt::Renderer* get_renderer();
+
+signals:
+    void opengl_initialized(Rt::OpenGLFunctions* gl);
 
 protected:
     void keyPressEvent(QKeyEvent* event) override;

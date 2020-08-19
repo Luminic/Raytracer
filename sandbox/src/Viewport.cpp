@@ -11,6 +11,8 @@ Viewport::Viewport(Camera* camera, CameraController* cam_controller, QWidget* pa
     camera(camera),
     cam_controller(cam_controller)
 {
+    connect(&gl_widget, &Rt::OpenGLWidget::opengl_initialized, this, &Viewport::opengl_initialized);
+
     QGridLayout* layout = new QGridLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->addWidget(&gl_widget, 0, 0);
@@ -24,6 +26,16 @@ Viewport::Viewport(Camera* camera, CameraController* cam_controller, QWidget* pa
 }
 
 Viewport::~Viewport() {}
+
+
+void Viewport::main_loop() {
+    cam_controller->main_loop();
+    gl_widget.main_loop();
+}
+
+Rt::Renderer* Viewport::get_renderer() {
+    return renderer;
+}
 
 void Viewport::keyPressEvent(QKeyEvent* event) {
     switch (event->key()) {
@@ -58,11 +70,6 @@ void Viewport::mouseMoveEvent(QMouseEvent* event) {
         QCursor::setPos(screen_center);
     }
     event->accept();
-}
-
-void Viewport::main_loop() {
-    cam_controller->main_loop();
-    gl_widget.main_loop();
 }
 
 void Viewport::capture_mouse() {

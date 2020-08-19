@@ -1,5 +1,5 @@
 #include "Renderer.hpp"
-#include "QDebug"
+#include <QDebug>
 
 namespace Rt {
 
@@ -22,18 +22,26 @@ namespace Rt {
 
     Renderer::Renderer(QObject* parent) : QObject(parent) {
         camera = nullptr;
+        scene = nullptr;
+        prev_width = 0;
+        prev_height = 0;
     }
 
     Renderer::~Renderer() {
-        glDeleteBuffers(1, &vertex_ssbo);
-        glDeleteBuffers(1, &index_ssbo);
+        gl->make_current();
+        gl->glDeleteBuffers(1, &vertex_ssbo);
+        gl->glDeleteBuffers(1, &static_vertex_ssbo);
+        gl->glDeleteBuffers(1, &static_index_ssbo);
+        gl->glDeleteBuffers(1, &dynamic_vertex_ssbo);
+        gl->glDeleteBuffers(1, &dynamic_index_ssbo);
+        gl->glDeleteBuffers(1, &mesh_ssbo);
+        gl->glDeleteBuffers(1, &material_ssbo);
     }
 
-    void Renderer::initialize(unsigned int width, unsigned int height) {
-        initializeOpenGLFunctions();
-
-        this->width = width;
-        this->height = height;
+    void Renderer::initialize(OpenGLFunctions* gl) {
+        this->gl = gl;
+        gl->make_current();
+        gl->initializeOpenGLFunctions();
 
         // Setup the render shader
         ShaderStage comp_shader{GL_COMPUTE_SHADER, ":/src/rendering/shaders/raytrace.glsl"};
@@ -41,104 +49,209 @@ namespace Rt {
         render_shader.load_shaders(&comp_shader, 1);
         render_shader.validate();
 
-        glGetProgramiv(render_shader.get_id(), GL_COMPUTE_WORK_GROUP_SIZE, work_group_size);
-        render_result.create(width, height);
+        gl->glGetProgramiv(render_shader.get_id(), GL_COMPUTE_WORK_GROUP_SIZE, work_group_size);
 
-        // Set up the Vertex SSBO
-        glGenBuffers(1, &vertex_ssbo);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, vertex_ssbo);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_ssbo);
+        // Set up the SSBOs
+        gl->glGenBuffers(1, &vertex_ssbo);
+        gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, vertex_ssbo);
+        gl->glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_ssbo);
+        gl->glBufferData(GL_SHADER_STORAGE_BUFFER, 0, nullptr, GL_STREAM_DRAW);
+        vertex_ssbo_size = 0;
 
-        Vertex verts[] = {
-            // Floor
-            Vertex(glm::vec4(-1.0f,-1.0f,-1.0f,1.0f), glm::vec4(0.0f), glm::vec2(1.0f, 1.0f)),
-            Vertex(glm::vec4( 1.0f,-1.0f,-1.0f,1.0f), glm::vec4(0.0f), glm::vec2(1.0f, 0.0f)),
-            Vertex(glm::vec4( 1.0f,-1.0f, 1.0f,1.0f), glm::vec4(0.0f), glm::vec2(0.0f, 1.0f)),
-            Vertex(glm::vec4(-1.0f,-1.0f, 1.0f,1.0f), glm::vec4(0.0f), glm::vec2(1.0f, 1.0f)),
+        gl->glGenBuffers(1, &static_vertex_ssbo);
+        gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, static_vertex_ssbo);
+        gl->glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, static_vertex_ssbo);
+        gl->glBufferData(GL_SHADER_STORAGE_BUFFER, 0, nullptr, GL_STATIC_DRAW);
+        static_vertex_ssbo_size = 0;
 
-            // Ceiling
-            Vertex(glm::vec4(-1.0f, 1.0f,-1.0f,1.0f), glm::vec4(0.0f), glm::vec2(1.0f, 1.0f)),
-            Vertex(glm::vec4( 1.0f, 1.0f,-1.0f,1.0f), glm::vec4(0.0f), glm::vec2(1.0f, 0.0f)),
-            Vertex(glm::vec4( 1.0f, 1.0f, 1.0f,1.0f), glm::vec4(0.0f), glm::vec2(0.0f, 1.0f)),
-            Vertex(glm::vec4(-1.0f, 1.0f, 1.0f,1.0f), glm::vec4(0.0f), glm::vec2(1.0f, 1.0f))
-        };
+        gl->glGenBuffers(1, &static_index_ssbo);
+        gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, static_index_ssbo);
+        gl->glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, static_index_ssbo);
+        gl->glBufferData(GL_SHADER_STORAGE_BUFFER, 0, nullptr, GL_STATIC_DRAW);
+        static_index_ssbo_size = 0;
+        
+        gl->glGenBuffers(1, &dynamic_vertex_ssbo);
+        gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, dynamic_vertex_ssbo);
+        gl->glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, dynamic_vertex_ssbo);
+        gl->glBufferData(GL_SHADER_STORAGE_BUFFER, 0, nullptr, GL_STREAM_DRAW);
+        dynamic_vertex_ssbo_size = 0;
 
-        vertices.insert(vertices.begin(), std::begin(verts), std::end(verts));
+        gl->glGenBuffers(1, &dynamic_index_ssbo);
+        gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, dynamic_index_ssbo);
+        gl->glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, dynamic_index_ssbo);
+        gl->glBufferData(GL_SHADER_STORAGE_BUFFER, 0, nullptr, GL_STREAM_DRAW);
+        dynamic_index_ssbo_size = 0;
 
-        if (vertex_is_opengl_compatible) {
-            glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(vertices[0])*vertices.size(), vertices.data(), GL_STATIC_DRAW);
-        } else {
-            std::vector<unsigned char> vertex_data(vertex_struct_size_in_opengl*vertices.size());
-            for (unsigned int i=0; i<vertices.size(); i++) {
-                vertices[i].as_byte_array(&vertex_data[i*vertex_struct_size_in_opengl]);
+        gl->glGenBuffers(1, &mesh_ssbo);
+        gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, mesh_ssbo);
+        gl->glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, mesh_ssbo);
+        gl->glBufferData(GL_SHADER_STORAGE_BUFFER, 0, nullptr, GL_STREAM_DRAW);
+        mesh_ssbo_size = 0;
+
+        gl->glGenBuffers(1, &material_ssbo);
+        gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, material_ssbo);
+        gl->glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, material_ssbo);
+        gl->glBufferData(GL_SHADER_STORAGE_BUFFER, 0, nullptr, GL_STREAM_DRAW);
+        material_ssbo_size = 0;
+
+        gl->glGenTextures(1, &material_texture_array);
+        gl->glBindTexture(GL_TEXTURE_2D_ARRAY, material_texture_array);
+        gl->glTextureParameteri(material_texture_array, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        gl->glTextureParameteri(material_texture_array, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        gl->glTextureParameteri(material_texture_array, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        gl->glTextureParameteri(material_texture_array, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        gl->glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA32F, 0, 0, 0, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+        gl->glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+    }
+
+    bool Renderer::update() {
+        if (scene) {
+            gl->make_current();
+
+            dynamic_vertices.clear();
+            dynamic_indices.clear();
+            meshes = scene->get_static_meshes();
+            traverse_node_tree(scene);
+
+            gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, dynamic_vertex_ssbo);
+            gl->glBufferData(GL_SHADER_STORAGE_BUFFER, dynamic_vertices.size(), dynamic_vertices.data(), GL_STREAM_DRAW);
+
+            gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, dynamic_index_ssbo);
+            gl->glBufferData(GL_SHADER_STORAGE_BUFFER, dynamic_indices.size()*sizeof(Index), dynamic_indices.data(), GL_STREAM_DRAW);
+
+            gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, mesh_ssbo);
+            gl->glBufferData(GL_SHADER_STORAGE_BUFFER, meshes.size(), meshes.data(), GL_STREAM_DRAW);
+
+            MaterialManager& material_manager = scene->get_material_manager();
+            const std::vector<unsigned char>& materials = material_manager.get_materials();
+
+            gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, material_ssbo);
+            gl->glBufferData(GL_SHADER_STORAGE_BUFFER, materials.size(), materials.data(), GL_STREAM_DRAW);
+
+            const std::vector<unsigned char>& mm_texture_array = material_manager.get_material_textures();
+            TextureIndex new_nr_material_textures = mm_texture_array.size() / material_manager.bytes_per_image();
+            if (nr_material_textures != new_nr_material_textures) {
+                nr_material_textures = new_nr_material_textures;
+                gl->glBindTexture(GL_TEXTURE_2D_ARRAY, material_texture_array);
+                gl->glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA32F, material_manager.get_texture_width(), material_manager.get_texture_height(), nr_material_textures, 0, GL_RGBA, GL_UNSIGNED_BYTE, mm_texture_array.data());
             }
-            glBufferData(GL_SHADER_STORAGE_BUFFER, vertex_data.size(), vertex_data.data(), GL_STATIC_DRAW);
+
+            return true;
         }
-
-        // Set up the Index SSBO
-        glGenBuffers(1, &index_ssbo);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, index_ssbo);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, index_ssbo);
-
-        unsigned int inds[] = {
-            0, 1, 2,
-            2, 3, 0,
-
-            4, 5, 6,
-            6, 7, 4
-        };
-
-        indices.insert(indices.begin(), std::begin(inds), std::end(inds));
-        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(indices[0])*indices.size(), indices.data(), GL_STATIC_DRAW);
-
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT); // Not 100% sure if necessary but just in case
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+        return false;
     }
 
-    void Renderer::resize(unsigned int width, unsigned int height) {
-        this->width = width;
-        this->height = height;
+    bool Renderer::render(Texture* render_result, unsigned int width, unsigned int height) {
+        if (camera && scene) {
+            update();
 
-        if (camera)
-            camera->update_perspective(float(width)/height);
-        render_result.resize(width, height);
-    }
+            gl->make_current();
 
-    Texture* Renderer::render() {
-        if (camera) {
+            if (prev_width != width || prev_height != height) {
+                prev_width = width;
+                prev_height = height;
+                camera->update_perspective(float(width)/height);
+            }
             camera->update_view();
             CornerRays eye_rays = camera->get_corner_rays();
+
             
-            glUseProgram(render_shader.get_id());
+            gl->glUseProgram(render_shader.get_id());
             render_shader.set_vec3("eye", camera->get_position());
             render_shader.set_vec3("ray00", eye_rays.r00);
             render_shader.set_vec3("ray10", eye_rays.r10);
             render_shader.set_vec3("ray01", eye_rays.r01);
             render_shader.set_vec3("ray11", eye_rays.r11);
 
-            glBindImageTexture(0, render_result.get_id(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+            gl->glActiveTexture(GL_TEXTURE0);
+            gl->glBindTexture(GL_TEXTURE_2D_ARRAY, material_texture_array);
+
+            gl->glBindImageTexture(0, render_result->get_id(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
             unsigned int worksize_x = round_up_to_pow_2(width);
             unsigned int worksize_y = round_up_to_pow_2(height);
-            glDispatchCompute(worksize_x/work_group_size[0], worksize_y/work_group_size[1], 1);
+            gl->glDispatchCompute(worksize_x/work_group_size[0], worksize_y/work_group_size[1], 1);
 
             // Clean up & make sure the shader has finished writing to the image
-            glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-            glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+            gl->glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+            gl->glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-            return &render_result;
+            return true;
         }
-        return nullptr;
+        return false;
     }
 
     void Renderer::set_camera(AbstractCamera* new_camera) {
         camera = new_camera;
-        qDebug() << "setting camera" << (void*)camera;
-        camera->update_perspective(float(width)/height);
+        camera->update_perspective(float(prev_width)/prev_height);
     }
 
     AbstractCamera* Renderer::get_camera() {
         return camera;
+    }
+
+    void Renderer::set_scene(Scene* new_scene) {
+        scene = new_scene;
+
+        gl->make_current();
+
+        const std::vector<unsigned char>& static_vertices = scene->get_static_vertices();
+        gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, static_vertex_ssbo);
+        gl->glBufferData(GL_SHADER_STORAGE_BUFFER, static_vertices.size(), static_vertices.data(), GL_STATIC_DRAW);
+        static_vertex_ssbo_size = static_vertices.size() / vertex_size_in_opengl;
+
+        const std::vector<Index>& static_indices = scene->get_static_indices();
+        gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, static_index_ssbo);
+        gl->glBufferData(GL_SHADER_STORAGE_BUFFER, static_indices.size()*sizeof(Index), static_indices.data(), GL_STATIC_DRAW);
+        static_index_ssbo_size = static_indices.size();
+
+        nr_material_textures = 0; // Will be updated later in update()
+    }
+
+    Scene* Renderer::get_scene() {
+        return scene;
+    }
+
+    void Renderer::traverse_node_tree(Node* node, glm::mat4 transformation) {
+        transformation *= node->get_transformation();
+
+        MaterialManager& material_manager = scene->get_material_manager();
+        const std::vector<std::shared_ptr<Mesh>>& node_meshes = node->get_child_meshes();
+        MeshIndex mesh_offset = meshes.size();
+        meshes.resize(meshes.size() + node_meshes.size()*mesh_size_in_opengl);
+        for (auto m : node_meshes) {
+            Index vertex_offset = dynamic_vertices.size()/vertex_size_in_opengl;
+            Index index_offset = dynamic_indices.size() + scene->get_static_indices().size();
+            MaterialIndex material_index = material_manager.get_material_index(m->get_material().get());
+
+            const std::vector<Vertex>& mesh_vertices = m->get_vertices();
+            if (vertex_is_opengl_compatible) {
+                unsigned char const* mesh_vertex_data = reinterpret_cast<unsigned char const*>(mesh_vertices.data());
+                dynamic_vertices.insert(std::end(dynamic_vertices), mesh_vertex_data, mesh_vertex_data+vertex_size_in_opengl*mesh_vertices.size());
+            } else {
+                dynamic_vertices.resize(dynamic_vertices.size() + mesh_vertices.size()*vertex_size_in_opengl);
+                for (Index i=0; i<mesh_vertices.size(); i++) {
+                    mesh_vertices[i].as_byte_array(dynamic_vertices.data()+vertex_offset+i*vertex_size_in_opengl);
+                }
+            }
+
+            const std::vector<Index>& mesh_indices = m->get_indices();
+            dynamic_indices.insert(std::end(dynamic_indices), std::begin(mesh_indices), std::end(mesh_indices));
+
+            m->as_byte_array(meshes.data()+mesh_offset, transformation, vertex_offset, index_offset, material_index);
+            mesh_offset += mesh_size_in_opengl;
+        }
+
+        const std::vector<std::shared_ptr<Node>>& node_child_nodes = node->get_child_nodes();
+        for (auto n : node_child_nodes) {
+            traverse_node_tree(n.get(), transformation);
+        }
+    }
+
+    void Renderer::update_material_textures() {
+        gl->make_current();
+
     }
 
 }

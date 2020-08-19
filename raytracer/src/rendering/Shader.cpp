@@ -18,11 +18,14 @@ namespace Rt {
     }
 
 
-    Shader::Shader(QObject* parent) : QObject(parent) {}
+    Shader::Shader(QObject* parent) : QObject(parent) {
+        id = 0;
+    }
 
 
     Shader::~Shader() {
-        glDeleteProgram(id);
+        if (id)
+            glDeleteProgram(id);
     }
 
 
@@ -103,7 +106,7 @@ namespace Rt {
     }
 
 
-    unsigned int Shader::get_id() {
+    unsigned int Shader::get_id() const {
         return id;
     }
 

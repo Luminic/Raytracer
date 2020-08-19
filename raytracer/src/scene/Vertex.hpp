@@ -1,5 +1,5 @@
-#ifndef VERTEX_HPP
-#define VERTEX_HPP
+#ifndef RT_VERTEX_HPP
+#define RT_VERTEX_HPP
 
 #include <glm/glm.hpp>
 
@@ -7,7 +7,10 @@
 
 namespace Rt {
 
+    constexpr int vertex_size_in_opengl = 48;
+
     struct Vertex {
+    public:
                                 // Base Alignment  // Aligned Offset
         glm::vec4 position;     // 4                  0  (vec4 is treated identical to an array of 4 floats)
                                 // 4                  4
@@ -31,7 +34,7 @@ namespace Rt {
         Vertex() = default;
 
 
-        void as_byte_array(unsigned char byte_array[48]);
+        void as_byte_array(unsigned char byte_array[vertex_size_in_opengl]) const;
     };
 
     /*
@@ -42,8 +45,9 @@ namespace Rt {
 
     The memory layout must exactly match the memory layout of the Vertex struct in GLSL
     */
-    constexpr int vertex_struct_size_in_opengl = 48;
-    constexpr bool vertex_is_opengl_compatible = (sizeof(Vertex) == vertex_struct_size_in_opengl) && std::is_standard_layout<Vertex>::value;
+    constexpr bool vertex_is_opengl_compatible = (sizeof(Vertex) == vertex_size_in_opengl) && std::is_standard_layout<Vertex>::value;
+
+    typedef uint32_t Index;
 
 }
 

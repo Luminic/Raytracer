@@ -15,7 +15,7 @@ Camera::Camera(float aspect_ratio, float fov, QObject* parent) :
 
 Camera::~Camera() {}
 
-glm::vec3 Camera::get_position() {
+glm::vec3 Camera::get_position() const {
     return position;
 }
 
@@ -29,7 +29,7 @@ void Camera::update_view() {
     view = glm::lookAt(position, position + cam_vecs.front, cam_vecs.up);
 }
 
-Rt::CameraDirectionVectors Camera::get_camera_direction_vectors() {
+Rt::CameraDirectionVectors Camera::get_camera_direction_vectors() const {
     float yaw = glm::radians(euler_angles[0]);
     float pitch = glm::radians(euler_angles[1]);
     // float roll = glm::radians(euler_angles[2]);
@@ -49,7 +49,7 @@ Rt::CameraDirectionVectors Camera::get_camera_direction_vectors() {
     return cam_vecs;
 }
 
-Rt::CornerRays Camera::get_corner_rays() {
+Rt::CornerRays Camera::get_corner_rays() const {
     Rt::CornerRays corner_rays;
     glm::mat4 inv_view_persp = glm::inverse(perspective*view);
     glm::vec4 tmp;

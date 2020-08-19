@@ -4,6 +4,9 @@
 #include <QMainWindow>
 #include <QTimer>
 
+#include <scene/Scene.hpp>
+#include <rendering/OpenGLFunctions.hpp>
+
 #include "Viewport.hpp"
 #include "Camera.hpp"
 #include "CameraController.hpp"
@@ -18,9 +21,12 @@ public:
 private:
     void main_loop();
 
+    void initialization(Rt::OpenGLFunctions* gl);
+
     QTimer timer;
 
     Camera camera;
+    Rt::Scene* scene;
     CameraController camera_controller;
     Viewport viewport;
 };

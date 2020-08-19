@@ -7,9 +7,12 @@
                 "/usr/include/qt/QtCore",
                 "/usr/include/qt/QtGui",
                 "/usr/include/qt/QtWidgets",
-                "/usr/include/qt"
+                "/usr/include/qt",
+                "${workspaceFolder}/raytracer/src"
             ],
-            "defines": ["MAKE_RAYTRACER_LIBRARY"],
+            "defines": [
+                "MAKE_RAYTRACER_LIBRARY"
+            ],
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c11",
             "cppStandard": "c++17",

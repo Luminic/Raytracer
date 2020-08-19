@@ -12,17 +12,21 @@ namespace Rt {
         format.setOption(QSurfaceFormat::DebugContext);
         setFormat(format);
 
-        render_result = nullptr;
+        gl = nullptr;
     }
 
     OpenGLWidget::~OpenGLWidget() {
         makeCurrent();
         glDeleteVertexArrays(1, &frame_vao);
         glDeleteBuffers(1, &frame_vbo);
+        delete gl;
     }
 
     void OpenGLWidget::initializeGL() {
         initializeOpenGLFunctions();
+
+        gl = new OpenGLFunctions(context(), context()->surface());
+        gl->initializeOpenGLFunctions();
 
         #ifdef QT_DEBUG
             QOpenGLContext* ctx = QOpenGLContext::currentContext();
@@ -54,7 +58,7 @@ namespace Rt {
         glDisable(GL_DEPTH_TEST); // OpenGL's default depth testing isn't useful when using compute shaders for raytracing
         glClearColor(0.0, 0.0, 0.0, 1.0);
 
-        renderer.initialize(width(), height());
+        renderer.initialize(gl);
 
         // Create the frame
         float frame_vertices[] = {
@@ -88,33 +92,35 @@ namespace Rt {
 
         frame_shader.load_shaders(shaders, 2);
         frame_shader.validate();
+
+        render_result.create(width(), height(), TextureOptions::default_2D_options());
+
+        emit opengl_initialized(gl);
     }
 
     void OpenGLWidget::resizeGL(int w, int h) {
-        renderer.resize(w, h);
+        render_result.resize(w, h);
     }
 
     void OpenGLWidget::paintGL() {
         glClear(GL_COLOR_BUFFER_BIT);
 
-        if (render_result) {
-            // Draw the render result to the screen
-            glUseProgram(frame_shader.get_id());
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, render_result->get_id());
-            frame_shader.set_int("render", 0);
-            glBindVertexArray(frame_vao);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
+        // Draw the render result to the screen
+        glUseProgram(frame_shader.get_id());
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, render_result.get_id());
+        frame_shader.set_int("render", 0);
+        glBindVertexArray(frame_vao);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
 
-            // Clean up
-            glBindTexture(GL_TEXTURE_2D, 0);
-            glBindVertexArray(0);
-        }
+        // Clean up
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glBindVertexArray(0);
     }
 
     void OpenGLWidget::main_loop() {
         makeCurrent();
-        render_result = renderer.render();
+        renderer.render(&render_result, width(), height());
         doneCurrent();
         update();
     }

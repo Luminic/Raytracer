@@ -27,15 +27,26 @@ DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs depr
 # Input
 HEADERS +=  src/RaytracerGlobals.hpp \
 			src/rendering/OpenGLWidget.hpp \
+			src/rendering/OpenGLFunctions.hpp \
 			src/rendering/Renderer.hpp \
 			src/rendering/Shader.hpp \
 			src/rendering/AbstractCamera.hpp \
+			src/scene/Scene.hpp \
+			src/scene/Node.hpp \
+			src/scene/Mesh.hpp \
 			src/scene/Vertex.hpp \
+			src/materials/MaterialManager.hpp \
+			src/materials/Material.hpp \
 			src/materials/Texture.hpp
 			
 
 SOURCES +=  src/rendering/OpenGLWidget.cpp \
 			src/rendering/Renderer.cpp \
 			src/rendering/Shader.cpp \
+			src/scene/Scene.cpp \
+			src/scene/Node.cpp \
+			src/scene/Mesh.cpp \
 			src/scene/Vertex.cpp \
+			src/materials/MaterialManager.cpp \
+			src/materials/Material.cpp \
 			src/materials/Texture.cpp

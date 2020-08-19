@@ -67,6 +67,8 @@
         "typeinfo": "cpp",
         "valarray": "cpp",
         "variant": "cpp",
-        "*.pro": "makefile"
+        "*.pro": "makefile",
+        "future": "cpp",
+        "bitset": "cpp"
     }
 }

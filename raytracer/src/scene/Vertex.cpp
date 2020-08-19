@@ -10,7 +10,7 @@ namespace Rt {
         tex_coords(tex_coords)
     {}
 
-    void Vertex::as_byte_array(unsigned char byte_array[48]) {
+    void Vertex::as_byte_array(unsigned char byte_array[vertex_size_in_opengl]) const {
         static_assert(sizeof(glm::vec4) == 16);
         static_assert(sizeof(glm::vec2) == 8);
 

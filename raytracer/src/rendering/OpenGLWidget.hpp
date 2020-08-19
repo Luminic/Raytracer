@@ -1,5 +1,5 @@
-#ifndef OPENGL_WIDGET_HPP
-#define OPENGL_WIDGET_HPP
+#ifndef RT_OPENGL_WIDGET_HPP
+#define RT_OPENGL_WIDGET_HPP
 
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions_4_5_Core>
@@ -10,6 +10,7 @@
 
 #include "Renderer.hpp"
 #include "Shader.hpp"
+#include "OpenGLFunctions.hpp"
 #include "materials/Texture.hpp"
 
 namespace Rt {
@@ -21,21 +22,27 @@ namespace Rt {
         OpenGLWidget(QWidget* parent=nullptr);
         ~OpenGLWidget();
 
-        void initializeGL() override;
-        void resizeGL(int w, int h) override;
-        void paintGL() override;
-
         void main_loop();
 
         Renderer* get_renderer();
 
+    signals:
+        void opengl_initialized(OpenGLFunctions* gl);
+
+    protected:
+        void initializeGL() override;
+        void resizeGL(int w, int h) override;
+        void paintGL() override;
+
     private:
+        OpenGLFunctions* gl;
+
         unsigned int frame_vbo;
         unsigned int frame_vao;
         Shader frame_shader;
 
         Renderer renderer;
-        Texture* render_result;
+        Texture render_result;
     };
 
 }

@@ -90,9 +90,11 @@ namespace Rt {
             ShaderStage{GL_FRAGMENT_SHADER, ":/src/rendering/shaders/framebuffer_fs.glsl"}
         };
 
+        frame_shader.initialize(gl);
         frame_shader.load_shaders(shaders, 2);
         frame_shader.validate();
 
+        render_result.initialize(gl);
         render_result.create(width(), height(), TextureOptions::default_2D_options());
 
         emit opengl_initialized(gl);
@@ -107,14 +109,12 @@ namespace Rt {
 
         // Draw the render result to the screen
         glUseProgram(frame_shader.get_id());
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, render_result.get_id());
+        glBindTextureUnit(0, render_result.get_id());
         frame_shader.set_int("render", 0);
         glBindVertexArray(frame_vao);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         // Clean up
-        glBindTexture(GL_TEXTURE_2D, 0);
         glBindVertexArray(0);
     }
 

@@ -2,11 +2,11 @@
 #define RT_SHADER_HPP
 
 #include <QObject>
-#include <QOpenGLFunctions_4_5_Core>
 
 #include <glm/glm.hpp>
 
 #include "RaytracerGlobals.hpp"
+#include "OpenGLFunctions.hpp"
 
 namespace Rt {
 
@@ -16,18 +16,20 @@ namespace Rt {
     };
 
 
-    class Shader : public QObject, protected QOpenGLFunctions_4_5_Core {
+    class Shader : public QObject {
         Q_OBJECT;
 
     public:
         Shader(QObject* parent=nullptr);
         ~Shader();
 
+        void initialize(OpenGLFunctions* gl);
         void load_shaders(ShaderStage shaders[], unsigned int nr_shaders);
         bool validate();
 
         unsigned int get_id() const;
 
+        // The following functions assume the opengl context is already current
         void set_bool(const char* name, bool value);
         void set_int(const char* name, int value);
         void set_float(const char* name, float value);
@@ -36,6 +38,7 @@ namespace Rt {
 
     private:
         unsigned int id;
+        OpenGLFunctions* gl;
     };
 
 }

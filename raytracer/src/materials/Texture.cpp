@@ -10,6 +10,7 @@ namespace Rt {
             GL_RGBA32F,
             GL_RGBA,
             GL_UNSIGNED_BYTE,
+            1,
             {
                 std::pair<GLenum, GLenum>(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE),
                 std::pair<GLenum, GLenum>(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE),
@@ -25,6 +26,7 @@ namespace Rt {
             GL_RGBA32F,
             GL_RGBA,
             GL_UNSIGNED_BYTE,
+            1,
             {
                 std::pair<GLenum, GLenum>(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE),
                 std::pair<GLenum, GLenum>(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE),
@@ -55,50 +57,42 @@ namespace Rt {
         glDeleteTextures(1, &id);
     }
 
+    void Texture::initialize(OpenGLFunctions* gl) {
+        this->gl = gl;
+    }
+
     void Texture::load(const char* path, const TextureOptions& tex_options) {
         QImage img = QImage(path).convertToFormat(QImage::Format_RGBA8888).mirrored(false, true);
         load(img, tex_options);
     }
 
     void Texture::load(QImage img, const TextureOptions& tex_options) {
-        initializeOpenGLFunctions();
-        this->tex_options = tex_options;
-
-        glGenTextures(1, &id);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(tex_options.texture_type, id);
-
-        set_params();
-        glTexImage2D(tex_options.texture_type, 0, tex_options.internal_format, img.width(), img.height(), 0, tex_options.format, tex_options.type, img.bits());
+        create(img.width(), img.height(), tex_options);
+        gl->glTextureSubImage2D(id, 0, 0, 0, img.width(), img.height(), tex_options.format, tex_options.type, img.constBits());
     }
 
     void Texture::create(unsigned int width, unsigned int height, const TextureOptions& texture_options) {
-        initializeOpenGLFunctions();
+        gl->make_current();
         this->tex_options = texture_options;
 
-        glGenTextures(1, &id);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(tex_options.texture_type, id);
+        gl->glCreateTextures(tex_options.texture_type, 1, &id);
 
         set_params();
-        glTexImage2D(tex_options.texture_type, 0, tex_options.internal_format, width, height, 0, tex_options.format, tex_options.type, nullptr);
+        gl->glTextureStorage2D(id, tex_options.levels, tex_options.internal_format, width, height);
     }
 
     void Texture::set_params() {
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(tex_options.texture_type, id);
-
         for (auto options_pair : tex_options.options) {
-            glTextureParameteri(id, options_pair.first, options_pair.second);
+            gl->glTextureParameteri(id, options_pair.first, options_pair.second);
         }
     }
 
     void Texture::resize(unsigned int width, unsigned int height) {
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(tex_options.texture_type, id);
-        glTexImage2D(tex_options.texture_type, 0, tex_options.internal_format, width, height, 0, tex_options.format, tex_options.type, nullptr);
+        gl->make_current();
+        glDeleteTextures(1, &id);
+        gl->glCreateTextures(tex_options.texture_type, 1, &id);
+        gl->glTextureStorage2D(id, tex_options.levels, tex_options.internal_format, width, height);
+        set_params();
     }
 
     unsigned int Texture::get_id() {

@@ -2,10 +2,10 @@
 #define RT_TEXTURES_HPP
 
 #include <QObject>
-#include <QOpenGLFunctions_4_5_Core>
 #include <vector>
 
 #include "RaytracerGlobals.hpp"
+#include "rendering/OpenGLFunctions.hpp"
 
 namespace Rt {
 
@@ -14,6 +14,7 @@ namespace Rt {
         GLenum internal_format;
         GLenum format;
         GLenum type;
+        int levels;
         // Stores pairs of pname and param to be used with glTexParameter
         std::vector<std::pair<GLenum, GLenum>> options;
 
@@ -26,12 +27,14 @@ namespace Rt {
     };
 
 
-    class RAYTRACER_LIB_EXPORT Texture : public QObject, protected QOpenGLFunctions_4_5_Core {
+    class RAYTRACER_LIB_EXPORT Texture : public QObject {
         Q_OBJECT;
 
     public:
         Texture(QObject* parent=nullptr);
         ~Texture();
+
+        void initialize(OpenGLFunctions* gl);
 
         void load(const char* path, const TextureOptions& texture_options);
         void load(QImage img, const TextureOptions& texture_options);
@@ -47,6 +50,7 @@ namespace Rt {
 
         TextureOptions tex_options;
         unsigned int id;
+        OpenGLFunctions* gl;
     };
 
 }

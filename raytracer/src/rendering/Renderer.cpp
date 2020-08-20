@@ -41,68 +41,55 @@ namespace Rt {
     void Renderer::initialize(OpenGLFunctions* gl) {
         this->gl = gl;
         gl->make_current();
-        gl->initializeOpenGLFunctions();
 
         // Setup the render shader
         ShaderStage comp_shader{GL_COMPUTE_SHADER, ":/src/rendering/shaders/raytrace.glsl"};
 
+        render_shader.initialize(gl);
         render_shader.load_shaders(&comp_shader, 1);
         render_shader.validate();
 
         gl->glGetProgramiv(render_shader.get_id(), GL_COMPUTE_WORK_GROUP_SIZE, work_group_size);
 
         // Set up the SSBOs
-        gl->glGenBuffers(1, &vertex_ssbo);
-        gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, vertex_ssbo);
+        gl->glCreateBuffers(1, &vertex_ssbo);
         gl->glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_ssbo);
-        gl->glBufferData(GL_SHADER_STORAGE_BUFFER, 0, nullptr, GL_STREAM_DRAW);
+        gl->glNamedBufferData(vertex_ssbo, 0, nullptr, GL_STREAM_DRAW);
         vertex_ssbo_size = 0;
 
-        gl->glGenBuffers(1, &static_vertex_ssbo);
-        gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, static_vertex_ssbo);
+        gl->glCreateBuffers(1, &static_vertex_ssbo);
         gl->glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, static_vertex_ssbo);
-        gl->glBufferData(GL_SHADER_STORAGE_BUFFER, 0, nullptr, GL_STATIC_DRAW);
+        gl->glNamedBufferData(static_vertex_ssbo, 0, nullptr, GL_STATIC_DRAW);
         static_vertex_ssbo_size = 0;
 
-        gl->glGenBuffers(1, &static_index_ssbo);
-        gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, static_index_ssbo);
+        gl->glCreateBuffers(1, &static_index_ssbo);
         gl->glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, static_index_ssbo);
-        gl->glBufferData(GL_SHADER_STORAGE_BUFFER, 0, nullptr, GL_STATIC_DRAW);
+        gl->glNamedBufferData(static_index_ssbo, 0, nullptr, GL_STATIC_DRAW);
         static_index_ssbo_size = 0;
         
-        gl->glGenBuffers(1, &dynamic_vertex_ssbo);
-        gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, dynamic_vertex_ssbo);
+        gl->glCreateBuffers(1, &dynamic_vertex_ssbo);
         gl->glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, dynamic_vertex_ssbo);
-        gl->glBufferData(GL_SHADER_STORAGE_BUFFER, 0, nullptr, GL_STREAM_DRAW);
+        gl->glNamedBufferData(dynamic_vertex_ssbo, 0, nullptr, GL_STREAM_DRAW);
         dynamic_vertex_ssbo_size = 0;
 
-        gl->glGenBuffers(1, &dynamic_index_ssbo);
-        gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, dynamic_index_ssbo);
+        gl->glCreateBuffers(1, &dynamic_index_ssbo);
         gl->glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, dynamic_index_ssbo);
-        gl->glBufferData(GL_SHADER_STORAGE_BUFFER, 0, nullptr, GL_STREAM_DRAW);
+        gl->glNamedBufferData(dynamic_index_ssbo, 0, nullptr, GL_STREAM_DRAW);
         dynamic_index_ssbo_size = 0;
 
-        gl->glGenBuffers(1, &mesh_ssbo);
-        gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, mesh_ssbo);
+        gl->glCreateBuffers(1, &mesh_ssbo);
         gl->glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, mesh_ssbo);
-        gl->glBufferData(GL_SHADER_STORAGE_BUFFER, 0, nullptr, GL_STREAM_DRAW);
+        gl->glNamedBufferData(mesh_ssbo, 0, nullptr, GL_STREAM_DRAW);
         mesh_ssbo_size = 0;
 
-        gl->glGenBuffers(1, &material_ssbo);
-        gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, material_ssbo);
+        gl->glCreateBuffers(1, &material_ssbo);
         gl->glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, material_ssbo);
-        gl->glBufferData(GL_SHADER_STORAGE_BUFFER, 0, nullptr, GL_STREAM_DRAW);
+        gl->glNamedBufferData(material_ssbo, 0, nullptr, GL_STREAM_DRAW);
         material_ssbo_size = 0;
 
-        gl->glGenTextures(1, &material_texture_array);
-        gl->glBindTexture(GL_TEXTURE_2D_ARRAY, material_texture_array);
-        gl->glTextureParameteri(material_texture_array, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        gl->glTextureParameteri(material_texture_array, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        gl->glTextureParameteri(material_texture_array, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        gl->glTextureParameteri(material_texture_array, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        gl->glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA32F, 0, 0, 0, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-
-        gl->glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+        // We need to create the texture here just in case there are no material textures
+        gl->glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &material_texture_array);
+        nr_material_textures = 0;
     }
 
     bool Renderer::update() {
@@ -114,27 +101,29 @@ namespace Rt {
             meshes = scene->get_static_meshes();
             traverse_node_tree(scene);
 
-            gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, dynamic_vertex_ssbo);
-            gl->glBufferData(GL_SHADER_STORAGE_BUFFER, dynamic_vertices.size(), dynamic_vertices.data(), GL_STREAM_DRAW);
-
-            gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, dynamic_index_ssbo);
-            gl->glBufferData(GL_SHADER_STORAGE_BUFFER, dynamic_indices.size()*sizeof(Index), dynamic_indices.data(), GL_STREAM_DRAW);
-
-            gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, mesh_ssbo);
-            gl->glBufferData(GL_SHADER_STORAGE_BUFFER, meshes.size(), meshes.data(), GL_STREAM_DRAW);
+            gl->glNamedBufferData(dynamic_vertex_ssbo, dynamic_vertices.size(), dynamic_vertices.data(), GL_STREAM_DRAW);
+            gl->glNamedBufferData(dynamic_index_ssbo, dynamic_indices.size()*sizeof(Index), dynamic_indices.data(), GL_STREAM_DRAW);
+            gl->glNamedBufferData(mesh_ssbo, meshes.size(), meshes.data(), GL_STREAM_DRAW);
 
             MaterialManager& material_manager = scene->get_material_manager();
             const std::vector<unsigned char>& materials = material_manager.get_materials();
 
-            gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, material_ssbo);
-            gl->glBufferData(GL_SHADER_STORAGE_BUFFER, materials.size(), materials.data(), GL_STREAM_DRAW);
+            gl->glNamedBufferData(material_ssbo, materials.size(), materials.data(), GL_STREAM_DRAW);
 
             const std::vector<unsigned char>& mm_texture_array = material_manager.get_material_textures();
             TextureIndex new_nr_material_textures = mm_texture_array.size() / material_manager.bytes_per_image();
             if (nr_material_textures != new_nr_material_textures) {
                 nr_material_textures = new_nr_material_textures;
-                gl->glBindTexture(GL_TEXTURE_2D_ARRAY, material_texture_array);
-                gl->glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA32F, material_manager.get_texture_width(), material_manager.get_texture_height(), nr_material_textures, 0, GL_RGBA, GL_UNSIGNED_BYTE, mm_texture_array.data());
+                gl->glDeleteTextures(1, &material_texture_array);
+
+                gl->glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &material_texture_array);
+                gl->glTextureStorage3D(material_texture_array, 1, GL_RGBA32F, material_manager.get_texture_width(), material_manager.get_texture_height(), nr_material_textures);
+                gl->glTextureSubImage3D(material_texture_array, 0, 0, 0, 0, material_manager.get_texture_width(), material_manager.get_texture_height(), nr_material_textures, GL_RGBA, GL_UNSIGNED_BYTE, mm_texture_array.data());
+
+                gl->glTextureParameteri(material_texture_array, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                gl->glTextureParameteri(material_texture_array, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                gl->glTextureParameteri(material_texture_array, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                gl->glTextureParameteri(material_texture_array, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             }
 
             return true;
@@ -197,13 +186,11 @@ namespace Rt {
         gl->make_current();
 
         const std::vector<unsigned char>& static_vertices = scene->get_static_vertices();
-        gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, static_vertex_ssbo);
-        gl->glBufferData(GL_SHADER_STORAGE_BUFFER, static_vertices.size(), static_vertices.data(), GL_STATIC_DRAW);
+        gl->glNamedBufferData(static_vertex_ssbo, static_vertices.size(), static_vertices.data(), GL_STATIC_DRAW);
         static_vertex_ssbo_size = static_vertices.size() / vertex_size_in_opengl;
 
         const std::vector<Index>& static_indices = scene->get_static_indices();
-        gl->glBindBuffer(GL_SHADER_STORAGE_BUFFER, static_index_ssbo);
-        gl->glBufferData(GL_SHADER_STORAGE_BUFFER, static_indices.size()*sizeof(Index), static_indices.data(), GL_STATIC_DRAW);
+        gl->glNamedBufferData(static_index_ssbo, static_indices.size()*sizeof(Index), static_indices.data(), GL_STATIC_DRAW);
         static_index_ssbo_size = static_indices.size();
 
         nr_material_textures = 0; // Will be updated later in update()

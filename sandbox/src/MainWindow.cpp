@@ -45,13 +45,14 @@ void MainWindow::initialization(Rt::OpenGLFunctions* gl) {
     face_material->albedo = glm::vec3(1.0f);
     face_material->texture_paths[0] = "../resources/textures/awesomeface.png";
 
-    std::shared_ptr<Rt::Material> jupiter_material = std::make_shared<Rt::Material>("Jupiter");
-    jupiter_material->albedo = glm::vec3(1.0f,1.0f,1.0f);
-    jupiter_material->metalness = 1.0f;
-    jupiter_material->roughness = 1.0f;
-    jupiter_material->texture_paths[0] = "../resources/textures/Metal004_4K-JPG/Metal004_4K_Color";
-    jupiter_material->texture_paths[2] = "../resources/textures/Metal004_4K-JPG/Metal004_4K_Roughness";
-    jupiter_material->texture_paths[3] = "../resources/textures/Metal004_4K-JPG/Metal004_4K_Metalness";
+    std::shared_ptr<Rt::Material> metal_material = std::make_shared<Rt::Material>("Jupiter");
+    metal_material->albedo = glm::vec3(1.0f,0.2f,0.2f);
+    metal_material->F0 = glm::vec3(1.44f);
+    metal_material->metalness = 1.0f;
+    metal_material->roughness = 1.0f;
+    metal_material->texture_paths[0] = "../resources/textures/Metal004_4K-JPG/Metal004_4K_Color";
+    metal_material->texture_paths[2] = "../resources/textures/Metal004_4K-JPG/Metal004_4K_Roughness";
+    metal_material->texture_paths[3] = "../resources/textures/Metal004_4K-JPG/Metal004_4K_Metalness";
 
     std::shared_ptr<Rt::Mesh> mesh = std::make_shared<Rt::Mesh>(
         std::vector<Rt::Vertex>{
@@ -73,17 +74,21 @@ void MainWindow::initialization(Rt::OpenGLFunctions* gl) {
 
     std::shared_ptr<Rt::Mesh> mesh1 = std::make_shared<Rt::Mesh>(
         std::vector<Rt::Vertex>{
-            Rt::Vertex(glm::vec4( 2.0f,0.0f,0.0f,1.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec2(0.0f, 0.0f)),
-            Rt::Vertex(glm::vec4( 4.0f,0.0f,0.0f,1.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec2(1.0f, 0.0f)),
-            Rt::Vertex(glm::vec4( 4.0f,2.0f,0.0f,1.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec2(1.0f, 1.0f)),
-            Rt::Vertex(glm::vec4( 2.0f,2.0f,0.0f,1.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec2(0.0f, 1.0f))
+            Rt::Vertex(glm::vec4(-1.0f,-1.0f,0.0f,1.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec2(0.0f, 0.0f)),
+            Rt::Vertex(glm::vec4( 1.0f,-1.0f,0.0f,1.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec2(1.0f, 0.0f)),
+            Rt::Vertex(glm::vec4( 1.0f, 1.0f,0.0f,1.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec2(1.0f, 1.0f)),
+            Rt::Vertex(glm::vec4(-1.0f, 1.0f,0.0f,1.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec2(0.0f, 1.0f))
         },
         std::vector<Rt::Index>{
             0, 1, 2,
             2, 3, 0
         }
     );
-    mesh1->set_material(jupiter_material);
+    mesh1->set_material(metal_material);
+
+    std::shared_ptr<Rt::Node> node1 = std::make_shared<Rt::Node>(mesh1);
+    node1->set_translation(glm::vec3(2.0f,0.0f,0.0f));
+    node1->set_rotation(glm::vec3(3.14f, 1.507f, 0.0f));
 
     std::shared_ptr<Rt::Mesh> mesh2 = std::make_shared<Rt::Mesh>(
         std::vector<Rt::Vertex>{
@@ -95,8 +100,8 @@ void MainWindow::initialization(Rt::OpenGLFunctions* gl) {
             0, 1, 2
         }
     );
-    mesh2->set_material(jupiter_material);
+    mesh2->set_material(metal_material);
 
-    scene->add_mesh(mesh1);
+    scene->add_node(node1);
     scene->add_mesh(mesh2);
 }

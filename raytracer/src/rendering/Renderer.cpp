@@ -49,6 +49,10 @@ namespace Rt {
         render_shader.load_shaders(&comp_shader, 1);
         render_shader.validate();
 
+        vertex_shader.initialize(gl);
+        ShaderStage vert_shader{GL_COMPUTE_SHADER, ":/src/rendering/shaders/vertex_shader.glsl"};
+        vertex_shader.load_shaders(&vert_shader, 1);
+
         gl->glGetProgramiv(render_shader.get_id(), GL_COMPUTE_WORK_GROUP_SIZE, work_group_size);
 
         // Set up the SSBOs
@@ -102,8 +106,15 @@ namespace Rt {
             traverse_node_tree(scene);
 
             gl->glNamedBufferData(dynamic_vertex_ssbo, dynamic_vertices.size(), dynamic_vertices.data(), GL_STREAM_DRAW);
+            dynamic_vertex_ssbo_size = dynamic_vertices.size() / vertex_size_in_opengl;
             gl->glNamedBufferData(dynamic_index_ssbo, dynamic_indices.size()*sizeof(Index), dynamic_indices.data(), GL_STREAM_DRAW);
+            dynamic_index_ssbo_size = dynamic_indices.size();
             gl->glNamedBufferData(mesh_ssbo, meshes.size(), meshes.data(), GL_STREAM_DRAW);
+            mesh_ssbo_size = meshes.size() / mesh_size_in_opengl;
+
+            // Allocate enough space for the vertex buffer
+            vertex_ssbo_size = dynamic_vertex_ssbo_size+static_vertex_ssbo_size;
+            gl->glNamedBufferData(vertex_ssbo, vertex_ssbo_size*vertex_size_in_opengl, nullptr, GL_STREAM_DRAW);
 
             MaterialManager& material_manager = scene->get_material_manager();
             const std::vector<unsigned char>& materials = material_manager.get_materials();
@@ -125,6 +136,15 @@ namespace Rt {
                 gl->glTextureParameteri(material_texture_array, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
                 gl->glTextureParameteri(material_texture_array, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             }
+
+            gl->glUseProgram(vertex_shader.get_id());
+            unsigned int worksize_x = round_up_to_pow_2(vertex_ssbo_size) / Y_SIZE + 1;
+            unsigned int worksize_y = Y_SIZE;
+            gl->glDispatchCompute(worksize_x, worksize_y, 1);
+
+            // Make sure the vertex shader has finished writing
+            gl->glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+            gl->glUseProgram(0);
 
             return true;
         }

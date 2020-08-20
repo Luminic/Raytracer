@@ -14,9 +14,9 @@ namespace Rt {
         Q_OBJECT;
 
     public:
+        Node();
         Node(std::shared_ptr<Mesh> child_mesh);
         Node(const std::vector<std::shared_ptr<Node>>& child_nodes, const std::vector<std::shared_ptr<Mesh>>& child_meshes);
-        Node() = default;
         virtual ~Node();
 
         // ===== Node hierarchy =====
@@ -70,6 +70,8 @@ namespace Rt {
         void removed_child_mesh(std::weak_ptr<Mesh>);
 
     private:
+        void init();
+
         std::vector<std::shared_ptr<Node>> child_nodes;
         std::vector<std::shared_ptr<Mesh>> child_meshes;
 

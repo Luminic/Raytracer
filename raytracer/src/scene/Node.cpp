@@ -1,18 +1,31 @@
 #include "Node.hpp"
 
+#include <QDebug>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Rt {
 
+    Node::Node() {
+        init();
+    }
+
     Node::Node(std::shared_ptr<Mesh> child_mesh) {
         child_meshes.push_back(child_mesh);
+        init();
     }
 
     Node::Node(const std::vector<std::shared_ptr<Node>>& child_nodes, const std::vector<std::shared_ptr<Mesh>>& child_meshes) :
         child_nodes(child_nodes),
         child_meshes(child_meshes)
     {
+        init();
+    }
 
+    void Node::init() {
+        transformation = glm::mat4(1.0f);
+        translation = glm::vec3(0.0f);
+        scale = glm::vec3(1.0f);
+        rotation = glm::vec3(0.0f);
     }
 
     Node::~Node() {}

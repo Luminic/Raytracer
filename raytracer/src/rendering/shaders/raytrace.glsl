@@ -228,15 +228,15 @@ Vertex cast_ray(vec3 ray_origin, vec3 ray_dir, float near_plane, float far_plane
             Vertex v1;
             Vertex v2;
 
-            // All 3 triangle vertices must be the same (static or dynamic)
+            // All mesh vertices must be the in same array (static or dynamic)
             if (i < static_indices.length()) {
-                v0 = static_vertices[static_indices[i+0] + meshes[mi].vertex_offset];
-                v1 = static_vertices[static_indices[i+1] + meshes[mi].vertex_offset];
-                v2 = static_vertices[static_indices[i+2] + meshes[mi].vertex_offset];
+                v0 = vertices[static_indices[i+0] + meshes[mi].vertex_offset];
+                v1 = vertices[static_indices[i+1] + meshes[mi].vertex_offset];
+                v2 = vertices[static_indices[i+2] + meshes[mi].vertex_offset];
             } else {
-                v0 = dynamic_vertices[dynamic_indices[i+0-static_indices.length()] + meshes[mi].vertex_offset];
-                v1 = dynamic_vertices[dynamic_indices[i+1-static_indices.length()] + meshes[mi].vertex_offset];
-                v2 = dynamic_vertices[dynamic_indices[i+2-static_indices.length()] + meshes[mi].vertex_offset];
+                v0 = vertices[dynamic_indices[i+0-static_indices.length()] + meshes[mi].vertex_offset + static_vertices.length()];
+                v1 = vertices[dynamic_indices[i+1-static_indices.length()] + meshes[mi].vertex_offset + static_vertices.length()];
+                v2 = vertices[dynamic_indices[i+2-static_indices.length()] + meshes[mi].vertex_offset + static_vertices.length()];
             }
 
             vec3 normal = cross(vec3(v1.position-v0.position), vec3(v2.position-v0.position));
@@ -292,9 +292,9 @@ float GF_smith(vec3 view, vec3 normal, vec3 light, float alpha) {
     return GF_schlick_GGX(n_dot_v, alpha) * GF_schlick_GGX(n_dot_l, alpha);
 }
 
-vec3 F_schlick(vec3 view, vec3 halfway, vec3 F0) {
+vec3 F_schlick(vec3 v1, vec3 v2, vec3 F0) {
     // F0 is the reflectivity at normal incidence
-    return F0 + (1.0f - F0) * pow((1.0f - max(dot(view, halfway), 0.0f)), 5);
+    return F0 + (1.0f - F0) * pow((1.0f - max(dot(v1, v2), 0.0f)), 5);
 }
 
 vec3 cook_torrance_BRDF(vec3 view, vec3 normal, vec3 light, MaterialData material) {
@@ -314,8 +314,7 @@ vec3 cook_torrance_BRDF(vec3 view, vec3 normal, vec3 light, MaterialData materia
     vec3 numer = NDF * GF * F;
     float denom = 4.0f * max(dot(normal, view), 0.0f) * max(dot(normal, light), 0.0f);
 
-    return NDF.xxx;
-    // return kD*lambertian_diffuse + numer/max(denom, 0.001f);
+    return kD*lambertian_diffuse + numer/max(denom, 0.001f);
 }
 
 // Lights
@@ -326,7 +325,7 @@ struct Light {
     float ambient_multiplier;
 };
 
-uniform Light sunlight = Light(normalize(vec3(0.4f, -1.0f, -0.4f)), vec3(1.0f), 0.3f);
+uniform Light sunlight = Light(normalize(vec3(0.4f, -1.0f, -0.4f)), vec3(3.0f), 0.3f);
 
 #define BIAS 0.0001f
 #define SHADOWS 1

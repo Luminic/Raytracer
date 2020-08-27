@@ -8,9 +8,9 @@
 
 #include <vector>
 
-#include "Renderer.hpp"
-#include "Shader.hpp"
-#include "OpenGLFunctions.hpp"
+#include "rendering/Renderer.hpp"
+#include "rendering/Shader.hpp"
+#include "rendering/OpenGLFunctions.hpp"
 #include "materials/Texture.hpp"
 
 namespace Rt {

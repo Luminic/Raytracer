@@ -6,8 +6,8 @@
 #include <unordered_map>
 
 #include "RaytracerGlobals.hpp"
-#include "Material.hpp"
-#include "Texture.hpp"
+#include "materials/Material.hpp"
+#include "materials/Texture.hpp"
 
 namespace Rt {
 

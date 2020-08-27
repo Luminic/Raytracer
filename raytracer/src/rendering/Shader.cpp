@@ -94,7 +94,6 @@ namespace Rt {
         }
     }
 
-
     bool Shader::validate() {
         gl->make_current();
         gl->glValidateProgram(id);
@@ -111,11 +110,9 @@ namespace Rt {
         return (bool) valid;
     }
 
-
     unsigned int Shader::get_id() const {
         return id;
     }
-
 
     void Shader::set_bool(const char* name, bool value) {
         unsigned int loc = gl->glGetUniformLocation(id, name);
@@ -128,18 +125,20 @@ namespace Rt {
         gl->glUniform1i(loc, value);
     }
 
+    void Shader::set_uint(const char* name, unsigned int value) {
+        unsigned int loc = gl->glGetUniformLocation(id, name);
+        gl->glUniform1ui(loc, value);
+    }
 
     void Shader::set_float(const char* name, float value) {
         unsigned int loc = gl->glGetUniformLocation(id, name);
         gl->glUniform1f(loc, value);
     }
 
-
     void Shader::set_vec3(const char* name, const glm::vec3 &value) {
         unsigned int loc = gl->glGetUniformLocation(id, name);
         gl->glUniform3fv(loc, 1, &value[0]);
     }
-
 
     void Shader::set_mat4(const char* name, const glm::mat4 &value) {
         unsigned int loc = gl->glGetUniformLocation(id, name);

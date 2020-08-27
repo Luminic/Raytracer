@@ -6,9 +6,9 @@
 #include <vector>
 
 #include "RaytracerGlobals.hpp"
-#include "Vertex.hpp"
-#include "Mesh.hpp"
-#include "Node.hpp"
+#include "scene/Vertex.hpp"
+#include "scene/Mesh.hpp"
+#include "scene/Node.hpp"
 #include "materials/Material.hpp"
 #include "materials/MaterialManager.hpp"
 

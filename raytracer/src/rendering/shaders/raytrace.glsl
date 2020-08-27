@@ -30,26 +30,31 @@ layout (std140, binding=0) buffer VertexBuffer {
     // ...
     // Maximum of 2,666,666 Vertices (128 MB / 48 B)
 };
+uniform uint nr_vertices;
 
 layout (std140, binding=3) buffer StaticVertexBuffer {
     // Same memory layout as VertexBuffer
     Vertex static_vertices[];
 };
+uniform uint nr_static_vertices;
 
 layout (std140, binding=4) buffer DynamicVertexBuffer {
     Vertex dynamic_vertices[];
 };
+uniform uint nr_dynamic_vertices;
 
 layout (std430, binding=1) buffer StaticIndexBuffer {
     // Memory layout should exactly match that of a C++ int array
     uint static_indices[];
 };
+uniform uint nr_static_indices;
 
 layout (std430, binding=2) buffer DynamicIndexBuffer {
     // Same as StaticIndexBuffer
     // Indices correspond to vertices[dynamic_indices[i] + nr_static_indices]
     uint dynamic_indices[];
 };
+uniform uint nr_dynamic_indices;
 
 struct Mesh {
                           // Base Alignment  // Aligned Offset
@@ -76,6 +81,7 @@ layout (std140, binding=5) buffer MeshBuffer {
     // mesh[3]  // 80              // 160
     // ...
 };
+uniform uint nr_meshes;
 
 layout (binding=0) uniform sampler2DArray material_textures;
 
@@ -104,6 +110,8 @@ struct Material {
 layout(std140, binding=6) buffer MaterialBuffer {
     Material materials[];
 };
+uniform uint nr_materials;
+
 
 // The per-pixel material data once the textures have been read
 // and added to the color information
@@ -221,7 +229,7 @@ Vertex cast_ray(vec3 ray_origin, vec3 ray_dir, float near_plane, float far_plane
     );
     mesh_index = -1;
 
-    for (uint mi=0; mi<meshes.length(); mi++) {
+    for (uint mi=0; mi<nr_meshes; mi++) {
 
         for (uint i=meshes[mi].index_offset; i<meshes[mi].index_offset+meshes[mi].nr_indices; i+=3) {
             Vertex v0;
@@ -229,14 +237,14 @@ Vertex cast_ray(vec3 ray_origin, vec3 ray_dir, float near_plane, float far_plane
             Vertex v2;
 
             // All mesh vertices must be the in same array (static or dynamic)
-            if (i < static_indices.length()) {
+            if (i < nr_static_indices) {
                 v0 = vertices[static_indices[i+0] + meshes[mi].vertex_offset];
                 v1 = vertices[static_indices[i+1] + meshes[mi].vertex_offset];
                 v2 = vertices[static_indices[i+2] + meshes[mi].vertex_offset];
             } else {
-                v0 = vertices[dynamic_indices[i+0-static_indices.length()] + meshes[mi].vertex_offset + static_vertices.length()];
-                v1 = vertices[dynamic_indices[i+1-static_indices.length()] + meshes[mi].vertex_offset + static_vertices.length()];
-                v2 = vertices[dynamic_indices[i+2-static_indices.length()] + meshes[mi].vertex_offset + static_vertices.length()];
+                v0 = vertices[dynamic_indices[i+0-nr_static_indices] + meshes[mi].vertex_offset + nr_static_vertices];
+                v1 = vertices[dynamic_indices[i+1-nr_static_indices] + meshes[mi].vertex_offset + nr_static_vertices];
+                v2 = vertices[dynamic_indices[i+2-nr_static_indices] + meshes[mi].vertex_offset + nr_static_vertices];
             }
 
             vec3 normal = cross(vec3(v1.position-v0.position), vec3(v2.position-v0.position));
@@ -307,9 +315,10 @@ vec3 cook_torrance_BRDF(vec3 view, vec3 normal, vec3 light, MaterialData materia
 
     float NDF = NDF_trowbridge_reitz_GGX(normal, halfway, alpha);
     float GF = GF_smith(view, normal, light, material.roughness);
-    vec3 F = F_schlick(view, halfway, F0);
+    vec3 F = F_schlick(light, halfway, F0);
 
-    vec3 kD = (1.0f.xxx - F) * (1.0f - material.metalness);
+    vec3 kD = (1.0f.xxx - F_schlick(normal, light, F0))*(1.0f.xxx - F_schlick(normal, view, F0));
+    kD *= (1.0f - material.metalness);
 
     vec3 numer = NDF * GF * F;
     float denom = 4.0f * max(dot(normal, view), 0.0f) * max(dot(normal, light), 0.0f);

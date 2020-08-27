@@ -7,7 +7,7 @@
 #include <memory>
 
 #include "RaytracerGlobals.hpp"
-#include "Vertex.hpp"
+#include "scene/Vertex.hpp"
 #include "materials/Material.hpp"
 
 namespace Rt {

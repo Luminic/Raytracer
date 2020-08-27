@@ -30,26 +30,31 @@ layout (std140, binding=0) buffer VertexBuffer {
     // ...
     // Maximum of 2,666,666 Vertices (128 MB / 48 B)
 };
+uniform uint nr_vertices;
 
 layout (std140, binding=3) buffer StaticVertexBuffer {
     // Same memory layout as VertexBuffer
     Vertex static_vertices[];
 };
+uniform uint nr_static_vertices;
 
 layout (std140, binding=4) buffer DynamicVertexBuffer {
     Vertex dynamic_vertices[];
 };
+uniform uint nr_dynamic_vertices;
 
 layout (std430, binding=1) buffer StaticIndexBuffer {
     // Memory layout should exactly match that of a C++ int array
     uint static_indices[];
 };
+uniform uint nr_static_indices;
 
 layout (std430, binding=2) buffer DynamicIndexBuffer {
     // Same as StaticIndexBuffer
     // Indices correspond to vertices[dynamic_indices[i] + nr_static_indices]
     uint dynamic_indices[];
 };
+uniform uint nr_dynamic_indices;
 
 struct Mesh {
                           // Base Alignment  // Aligned Offset
@@ -76,6 +81,7 @@ layout (std140, binding=5) buffer MeshBuffer {
     // mesh[3]  // 80              // 160
     // ...
 };
+uniform uint nr_meshes;
 
 #define Y_SIZE 64
 layout (local_size_x = 8, local_size_y = 8) in;
@@ -88,23 +94,23 @@ void main() {
     // The corresponding ogl code calling dispatch compute MUST know this Y_SIZE value and
     // take it into account when dispatching compute
     uint index = gl_GlobalInvocationID.x*Y_SIZE + gl_GlobalInvocationID.y;
-    if (index >= vertices.length() || gl_GlobalInvocationID.y >= Y_SIZE) {
+    if (index >= nr_vertices || gl_GlobalInvocationID.y >= Y_SIZE) {
         return;
     }
 
     Vertex vert;
-    if (index < static_vertices.length()) {
+    if (index < nr_static_vertices) {
         vert = static_vertices[index];
     } else {
-        vert = dynamic_vertices[index - static_vertices.length()];
+        vert = dynamic_vertices[index - nr_static_vertices];
     }
 
     // Honestly not a great solution but I have no idea how to get the mesh index another way
     uint mesh_index = 0;
-    for (uint mi=0; mi<meshes.length(); mi++) {
+    for (uint mi=0; mi<nr_meshes; mi++) {
         uint mesh_mi_vertex_offset = meshes[mi].vertex_offset;
-        if (meshes[mi].index_offset >= static_indices.length())
-            mesh_mi_vertex_offset += static_vertices.length();
+        if (meshes[mi].index_offset >= nr_static_indices)
+            mesh_mi_vertex_offset += nr_static_vertices;
 
         if (mesh_mi_vertex_offset > index)
             break;

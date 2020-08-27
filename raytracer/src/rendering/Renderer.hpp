@@ -6,9 +6,9 @@
 
 #include "RaytracerGlobals.hpp"
 
-#include "AbstractCamera.hpp"
-#include "Shader.hpp"
-#include "OpenGLFunctions.hpp"
+#include "rendering/AbstractCamera.hpp"
+#include "rendering/Shader.hpp"
+#include "rendering/OpenGLFunctions.hpp"
 #include "materials/Texture.hpp"
 #include "materials/Material.hpp"
 #include "materials/MaterialManager.hpp"

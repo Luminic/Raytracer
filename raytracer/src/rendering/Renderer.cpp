@@ -120,6 +120,7 @@ namespace Rt {
             const std::vector<unsigned char>& materials = material_manager.get_materials();
 
             gl->glNamedBufferData(material_ssbo, materials.size(), materials.data(), GL_STREAM_DRAW);
+            material_ssbo_size = materials.size()/material_size_in_opengl;
 
             const std::vector<unsigned char>& mm_texture_array = material_manager.get_material_textures();
             TextureIndex new_nr_material_textures = mm_texture_array.size() / material_manager.bytes_per_image();
@@ -138,6 +139,14 @@ namespace Rt {
             }
 
             gl->glUseProgram(vertex_shader.get_id());
+
+            vertex_shader.set_uint("nr_vertices", vertex_ssbo_size);
+            vertex_shader.set_uint("nr_static_vertices", static_vertex_ssbo_size);
+            vertex_shader.set_uint("nr_dynamic_vertices", dynamic_vertex_ssbo_size);
+            vertex_shader.set_uint("nr_static_indices", static_index_ssbo_size);
+            vertex_shader.set_uint("nr_dynamic_indices", dynamic_index_ssbo_size);
+            vertex_shader.set_uint("nr_meshes", mesh_ssbo_size);
+
             unsigned int worksize_x = round_up_to_pow_2(vertex_ssbo_size) / Y_SIZE + 1;
             unsigned int worksize_y = Y_SIZE;
             gl->glDispatchCompute(worksize_x, worksize_y, 1);
@@ -172,6 +181,22 @@ namespace Rt {
             render_shader.set_vec3("ray10", eye_rays.r10);
             render_shader.set_vec3("ray01", eye_rays.r01);
             render_shader.set_vec3("ray11", eye_rays.r11);
+
+            render_shader.set_uint("nr_vertices", vertex_ssbo_size);
+            render_shader.set_uint("nr_static_vertices", static_vertex_ssbo_size);
+            render_shader.set_uint("nr_dynamic_vertices", dynamic_vertex_ssbo_size);
+            render_shader.set_uint("nr_static_indices", static_index_ssbo_size);
+            render_shader.set_uint("nr_dynamic_indices", dynamic_index_ssbo_size);
+            render_shader.set_uint("nr_meshes", mesh_ssbo_size);
+            render_shader.set_uint("nr_materials", material_ssbo_size);
+
+            qDebug() << "nr_vertices" << vertex_ssbo_size;
+            qDebug() << "nr_static_vertices" << static_vertex_ssbo_size;
+            qDebug() << "nr_dynamic_vertices" << dynamic_vertex_ssbo_size;
+            qDebug() << "nr_static_indices" << static_index_ssbo_size;
+            qDebug() << "nr_dynamic_indices" << dynamic_index_ssbo_size;
+            qDebug() << "nr_meshes" << mesh_ssbo_size;
+            qDebug() << "nr_materials" << material_ssbo_size;
 
             gl->glActiveTexture(GL_TEXTURE0);
             gl->glBindTexture(GL_TEXTURE_2D_ARRAY, material_texture_array);

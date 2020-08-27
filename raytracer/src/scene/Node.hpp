@@ -6,7 +6,7 @@
 #include <memory>
 
 #include "RaytracerGlobals.hpp"
-#include "Mesh.hpp"
+#include "scene/Mesh.hpp"
 
 namespace Rt {
 

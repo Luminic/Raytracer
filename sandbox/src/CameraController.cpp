@@ -38,7 +38,7 @@ void CameraController::main_loop() {
     mouse_movement[0] = 0.0f;
     mouse_movement[1] = 0.0f;
 
-    Rt::CameraDirectionVectors cdv = camera->get_camera_direction_vectors();
+    CameraDirectionVectors cdv = camera->get_camera_direction_vectors();
     glm::vec3 current_movement(0.0f);
     if (movement.front) {
         current_movement += glm::normalize(glm::vec3(cdv.front.x, 0.0f, cdv.front.z));

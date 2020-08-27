@@ -190,14 +190,6 @@ namespace Rt {
             render_shader.set_uint("nr_meshes", mesh_ssbo_size);
             render_shader.set_uint("nr_materials", material_ssbo_size);
 
-            qDebug() << "nr_vertices" << vertex_ssbo_size;
-            qDebug() << "nr_static_vertices" << static_vertex_ssbo_size;
-            qDebug() << "nr_dynamic_vertices" << dynamic_vertex_ssbo_size;
-            qDebug() << "nr_static_indices" << static_index_ssbo_size;
-            qDebug() << "nr_dynamic_indices" << dynamic_index_ssbo_size;
-            qDebug() << "nr_meshes" << mesh_ssbo_size;
-            qDebug() << "nr_materials" << material_ssbo_size;
-
             gl->glActiveTexture(GL_TEXTURE0);
             gl->glBindTexture(GL_TEXTURE_2D_ARRAY, material_texture_array);
 

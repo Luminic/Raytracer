@@ -43,6 +43,7 @@ HEADERS +=  src/RaytracerGlobals.hpp \
 SOURCES +=  src/rendering/OpenGLWidget.cpp \
 			src/rendering/Renderer.cpp \
 			src/rendering/Shader.cpp \
+			src/rendering/AbstractCamera.cpp \
 			src/scene/Scene.cpp \
 			src/scene/Node.cpp \
 			src/scene/Mesh.cpp \

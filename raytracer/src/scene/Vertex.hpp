@@ -7,7 +7,7 @@
 
 namespace Rt {
 
-    constexpr int vertex_size_in_opengl = 48;
+    constexpr int vertex_size_in_opengl = 64;
 
     struct Vertex {
     public:
@@ -22,17 +22,23 @@ namespace Rt {
                                 // 4                  24
                                 // 4                  28
 
-        glm::vec2 tex_coords;   // 4                  32
+        // Bitangent sign is kept in the w-component of tangent
+        glm::vec4 tangent;      // 4                  32
                                 // 4                  36
+                                // 4                  40
+                                // 4                  44
 
-        char padding[8];        // 8                  40
+        glm::vec2 tex_coords;   // 4                  48
+                                // 4                  52
 
-        // Total Size: 48
+        char padding[8];        // 8                  56
+
+        // Total Size: 64
         // Alignment : 4
 
         Vertex(glm::vec4 position, glm::vec4 normal=glm::vec4(0.0f), glm::vec2 tex_coords=glm::vec2(0.0f));
+        Vertex(glm::vec4 position, glm::vec4 normal, glm::vec4 tangent, glm::vec4 bitangent, glm::vec2 tex_coords);
         Vertex() = default;
-
 
         void as_byte_array(unsigned char byte_array[vertex_size_in_opengl]) const;
     };

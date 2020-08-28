@@ -15,7 +15,7 @@ namespace Rt {
         Q_OBJECT;
 
     public:
-        MaterialManager(unsigned int texture_width=512, unsigned int texture_height=512, QObject* parent=nullptr);
+        MaterialManager(unsigned int texture_width=1024, unsigned int texture_height=1024, QObject* parent=nullptr);
         virtual ~MaterialManager();
 
         unsigned int get_texture_width() const;

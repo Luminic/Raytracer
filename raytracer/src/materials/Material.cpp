@@ -46,5 +46,8 @@ namespace Rt {
 
         tmp = reinterpret_cast<unsigned char const*>(&texture_indices[4]);
         std::copy(tmp, tmp+4, byte_array+60);
+
+        tmp = reinterpret_cast<unsigned char const*>(&texture_indices[5]);
+        std::copy(tmp, tmp+4, byte_array+64);
     }
 }

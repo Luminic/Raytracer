@@ -43,28 +43,46 @@ void MainWindow::initialization(Rt::OpenGLFunctions* gl) {
 
     std::shared_ptr<Rt::Material> face_material = std::make_shared<Rt::Material>("face_material");
     face_material->albedo = glm::vec3(1.0f);
-    face_material->texture_paths[0] = "../resources/textures/awesomeface.png";
+    face_material->texture_paths[0] = "resources/textures/awesomeface.png";
 
     std::shared_ptr<Rt::Material> metal_material = std::make_shared<Rt::Material>("Jupiter");
     metal_material->albedo = glm::vec3(1.0f,0.2f,0.2f);
-    metal_material->F0 = glm::vec3(1.44f);
     metal_material->metalness = 1.0f;
     metal_material->roughness = 1.0f;
-    metal_material->texture_paths[0] = "../resources/textures/Metal004_4K-JPG/Metal004_4K_Color";
-    metal_material->texture_paths[2] = "../resources/textures/Metal004_4K-JPG/Metal004_4K_Roughness";
-    metal_material->texture_paths[3] = "../resources/textures/Metal004_4K-JPG/Metal004_4K_Metalness";
+    metal_material->texture_paths[0] = "resources/textures/Metal004_4K-JPG/Metal004_4K_Color";
+    metal_material->texture_paths[2] = "resources/textures/Metal004_4K-JPG/Metal004_4K_Roughness";
+    metal_material->texture_paths[3] = "resources/textures/Metal004_4K-JPG/Metal004_4K_Metalness";
+    metal_material->texture_paths[5] = "resources/textures/Metal004_4K-JPG/Metal004_4K_Normal";
+
+    std::shared_ptr<Rt::Material> brick_material = std::make_shared<Rt::Material>("brick_material");
+    brick_material->albedo = glm::vec3(1.0f,1.0f,1.0f);
+    brick_material->metalness = 0.0f;
+    brick_material->roughness = 1.0f;
+    brick_material->texture_paths[0] = "resources/textures/Bricks/church_bricks_02_diff_png_4k.jpg";
+    brick_material->texture_paths[2] = "resources/textures/Bricks/church_bricks_02_rough_4k";
+    brick_material->texture_paths[4] = "resources/textures/Bricks/church_bricks_02_ao_4k";
+    brick_material->texture_paths[5] = "resources/textures/Bricks/church_bricks_02_nor_4k";
+    
+    std::shared_ptr<Rt::Material> floor_material = std::make_shared<Rt::Material>("floor_material");
+    floor_material->albedo = glm::vec3(1.0f,1.0f,1.0f);
+    floor_material->metalness = 0.0f;
+    floor_material->roughness = 1.0f;
+    floor_material->texture_paths[0] = "resources/textures/Floor/floor_tiles_02_diff_1k.jpg";
+    floor_material->texture_paths[2] = "resources/textures/Floor/floor_tiles_02_rough_1k.jpg";
+    floor_material->texture_paths[4] = "resources/textures/Floor/floor_tiles_02_ao_1k.jpg";
+    floor_material->texture_paths[5] = "resources/textures/Floor/floor_tiles_02_nor_1k.jpg";
 
     std::shared_ptr<Rt::Mesh> mesh = std::make_shared<Rt::Mesh>(
         std::vector<Rt::Vertex>{
-            Rt::Vertex(glm::vec4(-1.0f,0.0f,0.0f,1.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec2(0.0f, 0.0f)),
-            Rt::Vertex(glm::vec4( 1.0f,0.0f,0.0f,1.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec2(1.0f, 0.0f)),
-            Rt::Vertex(glm::vec4( 0.0f,1.0f,0.0f,1.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec2(0.5f, 1.0f))
+            Rt::Vertex(glm::vec4(-1.0f,0.0f,0.0f,1.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec4(1.0f,0.0f,0.0f,0.0f), glm::vec4(0.0f,1.0f,0.0f,0.0f), glm::vec2(0.0f, 0.0f)),
+            Rt::Vertex(glm::vec4( 1.0f,0.0f,0.0f,1.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec4(1.0f,0.0f,0.0f,0.0f), glm::vec4(0.0f,1.0f,0.0f,0.0f), glm::vec2(1.0f, 0.0f)),
+            Rt::Vertex(glm::vec4( 0.0f,1.0f,0.0f,1.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec4(1.0f,0.0f,0.0f,0.0f), glm::vec4(0.0f,1.0f,0.0f,0.0f), glm::vec2(0.5f, 1.0f))
         },
         std::vector<Rt::Index>{
             0, 1, 2
         }
     );
-    mesh->set_material(face_material);
+    mesh->set_material(brick_material);
     
     static_meshes.push_back(mesh);
     scene = new Rt::Scene(static_meshes);
@@ -74,10 +92,10 @@ void MainWindow::initialization(Rt::OpenGLFunctions* gl) {
 
     std::shared_ptr<Rt::Mesh> mesh1 = std::make_shared<Rt::Mesh>(
         std::vector<Rt::Vertex>{
-            Rt::Vertex(glm::vec4(-1.0f,-1.0f,0.0f,1.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec2(0.0f, 0.0f)),
-            Rt::Vertex(glm::vec4( 1.0f,-1.0f,0.0f,1.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec2(1.0f, 0.0f)),
-            Rt::Vertex(glm::vec4( 1.0f, 1.0f,0.0f,1.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec2(1.0f, 1.0f)),
-            Rt::Vertex(glm::vec4(-1.0f, 1.0f,0.0f,1.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec2(0.0f, 1.0f))
+            Rt::Vertex(glm::vec4(-1.0f,-1.0f,0.0f,1.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec4(1.0f,0.0f,0.0f,0.0f), glm::vec4(0.0f,1.0f,0.0f,0.0f), glm::vec2(0.0f, 0.0f)),
+            Rt::Vertex(glm::vec4( 1.0f,-1.0f,0.0f,1.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec4(1.0f,0.0f,0.0f,0.0f), glm::vec4(0.0f,1.0f,0.0f,0.0f), glm::vec2(1.0f, 0.0f)),
+            Rt::Vertex(glm::vec4( 1.0f, 1.0f,0.0f,1.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec4(1.0f,0.0f,0.0f,0.0f), glm::vec4(0.0f,1.0f,0.0f,0.0f), glm::vec2(1.0f, 1.0f)),
+            Rt::Vertex(glm::vec4(-1.0f, 1.0f,0.0f,1.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec4(1.0f,0.0f,0.0f,0.0f), glm::vec4(0.0f,1.0f,0.0f,0.0f), glm::vec2(0.0f, 1.0f))
         },
         std::vector<Rt::Index>{
             0, 1, 2,
@@ -92,15 +110,15 @@ void MainWindow::initialization(Rt::OpenGLFunctions* gl) {
 
     std::shared_ptr<Rt::Mesh> mesh2 = std::make_shared<Rt::Mesh>(
         std::vector<Rt::Vertex>{
-            Rt::Vertex(glm::vec4(-2.5f,0.0f,-2.0f, 1.0f), glm::vec4(0.0f,1.0f,0.0f,0.0f), glm::vec2(0.0f, 0.0f)),
-            Rt::Vertex(glm::vec4( 2.5f,0.0f,-2.0f, 1.0f), glm::vec4(0.0f,1.0f,0.0f,0.0f), glm::vec2(1.0f, 0.0f)),
-            Rt::Vertex(glm::vec4( 0.0f,0.0f, 2.33f,1.0f), glm::vec4(0.0f,1.0f,0.0f,0.0f), glm::vec2(0.5f, 1.0f)),
+            Rt::Vertex(glm::vec4(-2.5f,0.0f,-2.0f, 1.0f), glm::vec4(0.0f,-1.0f,0.0f,0.0f), glm::vec4(1.0f,0.0f,0.0f,0.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec2(0.0f, 0.0f)),
+            Rt::Vertex(glm::vec4( 2.5f,0.0f,-2.0f, 1.0f), glm::vec4(0.0f,-1.0f,0.0f,0.0f), glm::vec4(1.0f,0.0f,0.0f,0.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec2(1.0f, 0.0f)),
+            Rt::Vertex(glm::vec4( 0.0f,0.0f, 2.33f,1.0f), glm::vec4(0.0f,-1.0f,0.0f,0.0f), glm::vec4(1.0f,0.0f,0.0f,0.0f), glm::vec4(0.0f,0.0f,1.0f,0.0f), glm::vec2(0.5f, 1.0f)),
         },
         std::vector<Rt::Index>{
             0, 1, 2
         }
     );
-    mesh2->set_material(metal_material);
+    mesh2->set_material(floor_material);
 
     scene->add_node(node1);
     scene->add_mesh(mesh2);

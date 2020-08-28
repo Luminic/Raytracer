@@ -11,24 +11,29 @@ struct Vertex {
                     // 4                  20
                     // 4                  24
                     // 4 (total:16)       28
+    
+    vec4 tangent;   // 4                  32
+                    // 4                  36
+                    // 4                  40
+                    // 4 (total:16)       44
    
-    vec2 tex_coord; // 4                  32 
-                    // 4 (total:8)        36
+    vec2 tex_coord; // 4                  48 
+                    // 4 (total:8)        52
 
-    // (PADDING)    // 8                  40
+    // (PADDING)    // 8                  56
     // (8 bytes of padding to pad out struct to a multiple of the size of a vec4)
 
-    // Total Size: 48
+    // Total Size: 64
 };
 
 layout (std140, binding=0) buffer VertexBuffer {
     Vertex vertices[];
     //             // Base Alignment  // Aligned Offset
-    // vertex[0]      48                 0
-    // vertex[1]      48                 48
-    // vertex[2]      48                 96
+    // vertex[0]      64                 0
+    // vertex[1]      64                 64
+    // vertex[2]      64                 128
     // ...
-    // Maximum of 2,666,666 Vertices (128 MB / 48 B)
+    // Potential maximum of 2,000,000 Vertices (128 MB / 64 B)
 };
 uniform uint nr_vertices;
 
@@ -121,7 +126,9 @@ void main() {
     mat4 model = meshes[mesh_index].transformation;
 
     vert.position = model * vec4(vert.position.xyz, 1.0f);
-    vert.normal = vec4(transpose(inverse(mat3(model))) * vert.normal.xyz, 1.0f);
+    mat3 ti_model = transpose(inverse(mat3(model)));
+    vert.normal = vec4(ti_model * vert.normal.xyz, 0.0f);
+    vert.tangent = vec4(ti_model * vert.tangent.xyz, vert.tangent.w);
 
     vertices[index] = vert;
 }

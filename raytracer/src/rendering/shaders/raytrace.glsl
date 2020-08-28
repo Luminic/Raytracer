@@ -11,24 +11,29 @@ struct Vertex {
                     // 4                  20
                     // 4                  24
                     // 4 (total:16)       28
+    
+    vec4 tangent;   // 4                  32
+                    // 4                  36
+                    // 4                  40
+                    // 4 (total:16)       44
    
-    vec2 tex_coord; // 4                  32 
-                    // 4 (total:8)        36
+    vec2 tex_coord; // 4                  48 
+                    // 4 (total:8)        52
 
-    // (PADDING)    // 8                  40
+    // (PADDING)    // 8                  56
     // (8 bytes of padding to pad out struct to a multiple of the size of a vec4)
 
-    // Total Size: 48
+    // Total Size: 64
 };
 
 layout (std140, binding=0) buffer VertexBuffer {
     Vertex vertices[];
     //             // Base Alignment  // Aligned Offset
-    // vertex[0]      48                 0
-    // vertex[1]      48                 48
-    // vertex[2]      48                 96
+    // vertex[0]      64                 0
+    // vertex[1]      64                 64
+    // vertex[2]      64                 128
     // ...
-    // Maximum of 2,666,666 Vertices (128 MB / 48 B)
+    // Potential maximum of 2,000,000 Vertices (128 MB / 64 B)
 };
 uniform uint nr_vertices;
 
@@ -103,8 +108,11 @@ struct Material {
     int roughness_ti;      // 4               // 52
     int metalness_ti;      // 4               // 56
     int AO_ti;             // 4               // 60
+    int normal_ti;         // 4               // 64
 
-    // Total Size: 64
+    // PADDING:            // 12              // 80
+
+    // Total Size: 80
 };
 
 layout(std140, binding=6) buffer MaterialBuffer {
@@ -225,6 +233,7 @@ Vertex cast_ray(vec3 ray_origin, vec3 ray_dir, float near_plane, float far_plane
     Vertex vert = Vertex(
         vec4(0.0f,0.0f,0.0f,-1.0f),
         vec4(0.0f),
+        vec4(0.0f),
         vec2(0.0f)
     );
     mesh_index = -1;
@@ -260,6 +269,7 @@ Vertex cast_ray(vec3 ray_origin, vec3 ray_dir, float near_plane, float far_plane
                     depth = dist;
                     vert.position = vec4(intersection_point, 1.0f);
                     vert.normal = bc.x*v0.normal + bc.y*v1.normal + bc.z*v2.normal;
+                    vert.tangent = bc.x*v0.tangent + bc.y*v1.tangent + bc.z*v2.tangent;
                     vert.tex_coord = bc.x*v0.tex_coord + bc.y*v1.tex_coord + bc.z*v2.tex_coord;
                     mesh_index = int(mi);
                 }
@@ -335,6 +345,7 @@ struct Light {
 };
 
 uniform Light sunlight = Light(normalize(vec3(0.4f, -1.0f, -0.4f)), vec3(3.0f), 0.3f);
+// uniform Light sunlight = Light(normalize(vec3(0.3f, -0.3f, -1.0f)), vec3(3.0f), 0.3f);
 
 #define BIAS 0.0001f
 #define SHADOWS 1
@@ -359,14 +370,27 @@ vec4 trace(vec3 ray_origin, vec3 ray_dir) {
     ray_dir = normalize(ray_dir);
     int mesh_index;
     Vertex vert = cast_ray(ray_origin, ray_dir, mesh_index);
-    vert.normal *= sign(dot(vert.normal.xyz, -ray_dir));
-
-    // return vec4(vert.tex_coord.xy,0.0f,1.0f);
-    // return vec4(vert.position.xyz/2.0f, 1.0f);
+    vert.normal = vec4(normalize(vert.normal.xyz), 0.0f);
+    float normal_sign = sign(dot(vert.normal.xyz, -ray_dir));
+    vert.normal *= normal_sign;
 
     if (mesh_index == -1) return vec4(0.0f,1.0f,0.0f,1.0f);
 
-    MaterialData mat = get_material_data(materials[meshes[mesh_index].material_index], vert.tex_coord);
+    Material material = materials[meshes[mesh_index].material_index];
+    if (material.normal_ti != -1) {
+        vec3 tex_normal = textureLod(material_textures, vec3(vert.tex_coord, float(material.normal_ti)), 0).xyz * 2.0f - 1.0f;
+        vec3 norm = vert.normal.xyz;
+        vec3 tang = vert.tangent.xyz;
+        tang -= dot(tang, norm)*norm; // No need to divde by magnitude normal squared because the normal vectors should already be normalized
+        tang = normalize(tang);
+        vec3 bitang = normalize(cross(norm, tang)) * vert.tangent.w * normal_sign;
+
+        vert.normal = normalize(vec4(mat3(tang, bitang, norm) * tex_normal, 0.0f));
+        // if (gl_GlobalInvocationID.x >= 400)
+        // return vert.normal/2.0f;
+    }
+
+    MaterialData mat = get_material_data(material, vert.tex_coord);
     vec3 color = calculate_light(vert.position.rgb, vert.normal.xyz, ray_dir, mat, sunlight);
     return vec4(color, 1.0f);
 }

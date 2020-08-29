@@ -3,9 +3,13 @@
 
 namespace Rt {
 
-    Scene::Scene() {}
+    Scene::Scene() {
+        setObjectName(tr("Scene"));
+    }
 
     Scene::Scene(const std::vector<std::shared_ptr<Mesh>>& static_meshes) {
+        setObjectName(tr("Scene"));
+        
         for (auto mesh : static_meshes) {
             Index vertex_offset = static_vertices.size()/vertex_size_in_opengl;
             Index index_offset = static_indices.size();

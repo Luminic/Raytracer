@@ -3,13 +3,17 @@
 
 namespace Rt {
 
-    Mesh::Mesh(std::shared_ptr<Material> material) : material(material) {}
+    Mesh::Mesh(std::shared_ptr<Material> material) : material(material) {
+        setObjectName("Mesh");
+    }
 
     Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<Index>& indices, std::shared_ptr<Material> material) :
         material(material),
         vertices(vertices),
         indices(indices)
-    {}
+    {
+        setObjectName("Mesh");
+    }
 
     Mesh::~Mesh() {}
 

@@ -6,6 +6,8 @@
 
 #include <scene/Scene.hpp>
 #include <rendering/OpenGLFunctions.hpp>
+#include <settings/SceneHierarchy.hpp>
+#include <settings/Properties.hpp>
 
 #include "Viewport.hpp"
 #include "Camera.hpp"
@@ -27,8 +29,12 @@ private:
 
     Camera camera;
     Rt::Scene* scene;
+
     CameraController camera_controller;
     Viewport viewport;
+
+    Rt::SceneHierarchy* scene_hierarchy;
+    Rt::Properties* properties;
 };
 
 #endif

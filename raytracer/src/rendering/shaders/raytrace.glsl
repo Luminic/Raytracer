@@ -344,7 +344,7 @@ struct Light {
     float ambient_multiplier;
 };
 
-uniform Light sunlight = Light(normalize(vec3(0.4f, -1.0f, -0.4f)), vec3(3.0f), 0.3f);
+uniform Light sunlight = Light(normalize(vec3(0.4f, -1.0f, -0.4f)), vec3(3.0f), 1.0f);
 // uniform Light sunlight = Light(normalize(vec3(0.3f, -0.3f, -1.0f)), vec3(3.0f), 0.3f);
 
 #define BIAS 0.0001f
@@ -386,8 +386,6 @@ vec4 trace(vec3 ray_origin, vec3 ray_dir) {
         vec3 bitang = normalize(cross(norm, tang)) * vert.tangent.w * normal_sign;
 
         vert.normal = normalize(vec4(mat3(tang, bitang, norm) * tex_normal, 0.0f));
-        // if (gl_GlobalInvocationID.x >= 400)
-        // return vert.normal/2.0f;
     }
 
     MaterialData mat = get_material_data(material, vert.tex_coord);

@@ -37,7 +37,9 @@ HEADERS +=  src/RaytracerGlobals.hpp \
 			src/scene/Vertex.hpp \
 			src/materials/MaterialManager.hpp \
 			src/materials/Material.hpp \
-			src/materials/Texture.hpp
+			src/materials/Texture.hpp \
+			src/settings/Properties.hpp \
+			src/settings/SceneHierarchy.hpp
 			
 
 SOURCES +=  src/rendering/OpenGLWidget.cpp \
@@ -50,4 +52,6 @@ SOURCES +=  src/rendering/OpenGLWidget.cpp \
 			src/scene/Vertex.cpp \
 			src/materials/MaterialManager.cpp \
 			src/materials/Material.cpp \
-			src/materials/Texture.cpp
+			src/materials/Texture.cpp \
+			src/settings/Properties.cpp \
+			src/settings/SceneHierarchy.cpp

@@ -64,10 +64,10 @@ namespace Rt {
         virtual void apply_transformations();
 
     signals:
-        void added_child_node(std::weak_ptr<Node>);
-        void added_child_mesh(std::weak_ptr<Mesh>);
-        void removed_child_node(std::weak_ptr<Node>);
-        void removed_child_mesh(std::weak_ptr<Mesh>);
+        void added_child_node(std::shared_ptr<Node> node);
+        void added_child_mesh(std::shared_ptr<Mesh> mesh);
+        void removed_child_node(std::shared_ptr<Node> node);
+        void removed_child_mesh(std::shared_ptr<Mesh> mesh);
 
     private:
         void init();

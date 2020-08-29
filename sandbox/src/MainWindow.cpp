@@ -1,5 +1,6 @@
 #include "MainWindow.hpp"
 #include <QPushButton>
+#include <QDockWidget>
 #include <QApplication>
 #include <QKeyEvent>
 #include <QDebug>
@@ -21,6 +22,19 @@ MainWindow::MainWindow(QWidget* parent) :
     resize(800, 600);
 
     setCentralWidget(&viewport);
+
+    QDockWidget* scene_hierarchy_container = new QDockWidget(this);
+    scene_hierarchy = new Rt::SceneHierarchy(scene_hierarchy_container);
+    scene_hierarchy_container->setWidget(scene_hierarchy);
+
+    QDockWidget* properties_container = new QDockWidget(this);
+    properties = new Rt::Properties(properties_container);
+    properties_container->setWidget(properties);
+
+    connect(scene_hierarchy, &Rt::SceneHierarchy::node_selected, properties, &Rt::Properties::node_selected);
+
+    addDockWidget(Qt::RightDockWidgetArea, scene_hierarchy_container);
+    addDockWidget(Qt::RightDockWidgetArea, properties_container);
 
     show();
 
@@ -86,6 +100,7 @@ void MainWindow::initialization(Rt::OpenGLFunctions* gl) {
     
     static_meshes.push_back(mesh);
     scene = new Rt::Scene(static_meshes);
+    scene_hierarchy->add_scene(scene);
 
     viewport.get_renderer()->set_scene(scene);
 

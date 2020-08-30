@@ -64,6 +64,11 @@ namespace Rt {
         virtual void apply_transformations();
 
     signals:
+        void translation_changed(const glm::vec3&);
+        void rotation_changed(const glm::vec3&);
+        void scale_changed(const glm::vec3&);
+        void transformation_changed(const glm::mat4&);
+
         void added_child_node(std::shared_ptr<Node> node);
         void added_child_mesh(std::shared_ptr<Mesh> mesh);
         void removed_child_node(std::shared_ptr<Node> node);

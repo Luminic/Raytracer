@@ -90,6 +90,7 @@ namespace Rt {
     }
     void Node::set_translation(const glm::vec3& new_translation) {
         translation = new_translation;
+        emit translation_changed(translation);
     }
 
     glm::vec3 Node::get_euler_angle_rotation() const {
@@ -97,6 +98,7 @@ namespace Rt {
     }
     void Node::set_rotation(const glm::vec3& new_euler_angle_rotation) {
         rotation = new_euler_angle_rotation;
+        emit rotation_changed(rotation);
     }
 
     glm::vec3 Node::get_scale() const {
@@ -104,6 +106,7 @@ namespace Rt {
     }
     void Node::set_scale(const glm::vec3& new_scale) {
         scale = new_scale;
+        emit scale_changed(scale);
     }
 
     glm::mat4 Node::get_transformation() const {
@@ -118,6 +121,7 @@ namespace Rt {
 
     void Node::apply_transformations() {
         transformation = get_transformation();
+        emit transformation_changed(transformation);
     }
 
 }

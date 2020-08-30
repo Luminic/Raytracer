@@ -4,6 +4,7 @@
 #include <QTreeView>
 #include <QStandardItemModel>
 
+#include "RaytracerGlobals.hpp"
 #include "scene/Node.hpp"
 #include "scene/Scene.hpp"
 

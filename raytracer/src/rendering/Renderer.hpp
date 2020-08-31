@@ -91,6 +91,10 @@ namespace Rt {
         TextureIndex nr_material_textures;
         void update_material_textures();
 
+        std::vector<unsigned char> lights;
+        unsigned int light_ssbo;
+        unsigned int light_ssbo_size;
+
         unsigned int prev_width;
         unsigned int prev_height;
     };

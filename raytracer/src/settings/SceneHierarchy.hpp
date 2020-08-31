@@ -1,5 +1,5 @@
-#ifndef RT_SCENE_HIERARCHY
-#define RT_SCENE_HIERARCHY
+#ifndef RT_SCENE_HIERARCHY_HPP
+#define RT_SCENE_HIERARCHY_HPP
 
 #include <QTreeView>
 #include <QStandardItemModel>

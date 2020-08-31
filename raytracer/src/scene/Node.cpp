@@ -27,10 +27,15 @@ namespace Rt {
         scale = glm::vec3(1.0f);
         rotation = glm::vec3(0.0f);
 
+        node_type = NodeType::NODE;
         setObjectName("Node");
     }
 
     Node::~Node() {}
+
+    Node::NodeType Node::get_node_type() const {
+        return node_type;
+    }
 
     // ===== Node hierarchy =====
 

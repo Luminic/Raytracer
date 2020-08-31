@@ -1,5 +1,5 @@
-#ifndef RT_MATERIAL_MANAGER
-#define RT_MATERIAL_MANAGER
+#ifndef RT_MATERIAL_MANAGER_HPP
+#define RT_MATERIAL_MANAGER_HPP
 
 #include <QObject>
 #include <vector>

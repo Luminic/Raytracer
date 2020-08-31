@@ -19,6 +19,16 @@ namespace Rt {
         Node(const std::vector<std::shared_ptr<Node>>& child_nodes, const std::vector<std::shared_ptr<Mesh>>& child_meshes);
         virtual ~Node();
 
+        enum NodeType {
+            NODE,
+            SCENE, // Can be reinterpret as `Scene`
+            LIGHT, // Can be reinterpret as `AbstractLight`
+            BONE, // Currently unimplemented
+            UNKNOWN // Use dynamic cast to find out what type it is
+        };
+        Q_ENUM(NodeType)
+        NodeType get_node_type() const;
+
         // ===== Node hierarchy =====
 
         virtual void add_node(std::shared_ptr<Node> node);
@@ -73,6 +83,9 @@ namespace Rt {
         void added_child_mesh(std::shared_ptr<Mesh> mesh);
         void removed_child_node(std::shared_ptr<Node> node);
         void removed_child_mesh(std::shared_ptr<Mesh> mesh);
+    
+    protected:
+        NodeType node_type;
 
     private:
         void init();

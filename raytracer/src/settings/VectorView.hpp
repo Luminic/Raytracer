@@ -1,5 +1,5 @@
-#ifndef RT_VECTOR_VIEW
-#define RT_VECTOR_VIEW
+#ifndef RT_VECTOR_VIEW_HPP
+#define RT_VECTOR_VIEW_HPP
 
 #include <QWidget>
 #include <QDoubleSpinBox>

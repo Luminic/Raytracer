@@ -31,6 +31,8 @@ namespace Rt {
         const std::vector<unsigned char>& get_static_meshes() const;
 
     private:
+        void init();
+
         MaterialManager material_manager;
 
         // Should match OpenGL memory layout

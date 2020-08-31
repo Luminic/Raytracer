@@ -35,6 +35,9 @@ HEADERS +=  src/RaytracerGlobals.hpp \
 			src/scene/Node.hpp \
 			src/scene/Mesh.hpp \
 			src/scene/Vertex.hpp \
+			src/scene/lights/AbstractLight.hpp \
+			src/scene/lights/SunLight.hpp \
+			src/scene/lights/PointLight.hpp \
 			src/materials/MaterialManager.hpp \
 			src/materials/Material.hpp \
 			src/materials/Texture.hpp \
@@ -51,6 +54,9 @@ SOURCES +=  src/rendering/OpenGLWidget.cpp \
 			src/scene/Node.cpp \
 			src/scene/Mesh.cpp \
 			src/scene/Vertex.cpp \
+			src/scene/lights/AbstractLight.cpp \
+			src/scene/lights/SunLight.cpp \
+			src/scene/lights/PointLight.cpp \
 			src/materials/MaterialManager.cpp \
 			src/materials/Material.cpp \
 			src/materials/Texture.cpp \

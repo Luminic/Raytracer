@@ -4,12 +4,11 @@
 namespace Rt {
 
     Scene::Scene() {
-        setObjectName(tr("Scene"));
+        init();
     }
 
     Scene::Scene(const std::vector<std::shared_ptr<Mesh>>& static_meshes) {
-        setObjectName(tr("Scene"));
-        
+        init();
         for (auto mesh : static_meshes) {
             Index vertex_offset = static_vertices.size()/vertex_size_in_opengl;
             Index index_offset = static_indices.size();
@@ -34,6 +33,11 @@ namespace Rt {
     }
 
     Scene::~Scene() {}
+
+    void Scene::init() {
+        setObjectName(tr("Scene"));
+        node_type = Node::NodeType::SCENE;
+    }
 
     MaterialManager& Scene::get_material_manager() {
         return material_manager;

@@ -35,31 +35,36 @@ layout (std140, binding=0) buffer VertexBuffer {
     // ...
     // Potential maximum of 2,000,000 Vertices (128 MB / 64 B)
 };
-uniform uint nr_vertices;
+uniform uint nr_vertices = 0;
 
-layout (std140, binding=3) buffer StaticVertexBuffer {
-    // Same memory layout as VertexBuffer
-    Vertex static_vertices[];
-};
-uniform uint nr_static_vertices;
-
-layout (std140, binding=4) buffer DynamicVertexBuffer {
-    Vertex dynamic_vertices[];
-};
-uniform uint nr_dynamic_vertices;
 
 layout (std430, binding=1) buffer StaticIndexBuffer {
     // Memory layout should exactly match that of a C++ int array
     uint static_indices[];
 };
-uniform uint nr_static_indices;
+uniform uint nr_static_indices = 0;
+
 
 layout (std430, binding=2) buffer DynamicIndexBuffer {
     // Same as StaticIndexBuffer
     // Indices correspond to vertices[dynamic_indices[i] + nr_static_indices]
     uint dynamic_indices[];
 };
-uniform uint nr_dynamic_indices;
+uniform uint nr_dynamic_indices = 0;
+
+
+layout (std140, binding=3) buffer StaticVertexBuffer {
+    // Same memory layout as VertexBuffer
+    Vertex static_vertices[];
+};
+uniform uint nr_static_vertices = 0;
+
+
+layout (std140, binding=4) buffer DynamicVertexBuffer {
+    Vertex dynamic_vertices[];
+};
+uniform uint nr_dynamic_vertices = 0;
+
 
 struct Mesh {
                           // Base Alignment  // Aligned Offset
@@ -86,7 +91,8 @@ layout (std140, binding=5) buffer MeshBuffer {
     // mesh[3]  // 80              // 160
     // ...
 };
-uniform uint nr_meshes;
+uniform uint nr_meshes = 0;
+
 
 layout (binding=0) uniform sampler2DArray material_textures;
 
@@ -118,7 +124,25 @@ struct Material {
 layout(std140, binding=6) buffer MaterialBuffer {
     Material materials[];
 };
-uniform uint nr_materials;
+uniform uint nr_materials = 0;
+
+
+struct Light {
+                              // Base Alignment  // Aligned Offset
+    vec3 position;            // 12              // 0
+    int type;                 // 4               // 12
+    vec3 direction;           // 12              // 16
+    int visibility;           // 4               // 28
+    vec3 radiance;            // 12              // 32
+    float ambient_multiplier; // 4               // 44
+
+    // Total Size: 48
+};
+
+layout(std430, binding=7) buffer LightBuffer {
+    Light lights[];
+};
+uniform uint nr_lights = 0;
 
 
 // The per-pixel material data once the textures have been read
@@ -157,6 +181,40 @@ MaterialData get_material_data(Material material, vec2 tex_coords) {
     return material_data;
 }
 
+
+struct LightData {
+    vec3 direction;
+    float light_distance; // Negative distance (-1) means infinitely far away
+    vec3 radiance;
+    float ambient_multiplier;
+};
+
+// 0: Sunlight
+// 1: Pointlight
+// 2: Dirlight (Currently unimplemented)
+LightData get_light_data(Light light, vec3 at) {
+    LightData light_data = {
+        vec3(1.0f), -1.0f, vec3(1.0f,0.0f,1.0f), 1.0f
+    };
+
+    if (light.type == 0) {
+        light_data.direction = normalize(light.direction);
+        light_data.light_distance = -1;
+        light_data.radiance = light.radiance;
+        light_data.ambient_multiplier = light.ambient_multiplier;
+    }
+    else if (light.type == 1) {
+        light_data.direction = normalize(at - light.position);
+        light_data.light_distance = distance(light.position, at);
+        float falloff = 1.0f / (1.0f + light_data.light_distance*light_data.light_distance);
+        light_data.radiance = light.radiance * falloff;
+        light_data.ambient_multiplier = light.ambient_multiplier * falloff;
+    }
+
+    return light_data;
+}
+
+
 layout (binding = 0, rgba32f) uniform image2D framebuffer;
 
 uniform vec3 eye;
@@ -175,16 +233,16 @@ uniform vec3 ray11;
 
 float ray_plane_int(vec3 ray_origin, vec3 ray_dir, vec3 plane_point, vec3 plane_normal) {
     /*
-    A ray is described as ray_orign + t * ray_dir
+    A ray is described as ray_origin + t * ray_dir
     This function returns t if the ray intersects the plane. Negative output means no intersection
     
-    Ray equation: <x,y,z> = ray_orign + t * ray_dir
+    Ray equation: <x,y,z> = ray_origin + t * ray_dir
     Plane equation: dot(plane_normal, <x,y,z>) + D = 0
     We can calculate D = -dot(plane_normal, plane_point)
 
-    dot(plane_normal, ray_orign + t * ray_dir) + D = 0
-    dot(plane_normal, ray_orign) + t * dot(plane_normal, ray_dir) + D = 0
-    t = - (D + dot(plane_normal, ray_orign)) / dot(plane_normal, ray_dir)
+    dot(plane_normal, ray_origin + t * ray_dir) + D = 0
+    dot(plane_normal, ray_origin) + t * dot(plane_normal, ray_dir) + D = 0
+    t = - (D + dot(plane_normal, ray_origin)) / dot(plane_normal, ray_dir)
     */
     float denom = dot(plane_normal, ray_dir);
 
@@ -197,6 +255,36 @@ float ray_plane_int(vec3 ray_origin, vec3 ray_dir, vec3 plane_point, vec3 plane_
     float numer = -(dot(plane_normal, ray_origin) + D);
 
     return numer/denom;
+}
+
+float ray_sphere_int(vec3 ray_origin, vec3 ray_dir, vec3 sphere_origin, float sphere_radius, out bool intersected) {
+    /*
+    math source: https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection
+    ray: <x,y,z> = ray_origin + t * ray_dir
+    sphere centered @ origin: x^2 + y^2 + z^2 = sphere_radius^2 
+    intersection: ||ray_origin + t * ray_dir||^2 - sphere_radius^2 = 0
+    intersection (sphere not centered, multiplication between vectors is the dot prduct):
+        ||(ray_origin-sphere_origin) + t * ray_dir||^2 - sphere_radius^2 = 0
+        ||ray_origin-sphere_origin||^2 + 2*(ray_origin-sphere_origin)(t * ray_dir) + t^2 * ||ray_dir||^2 - sphere_radius^2 = 0
+    using quadratic formula to solve for t: x = (-b + sqrt(b^2 - 4ac)) / 2a
+        a = ||ray_dir||^2
+        b = 2*(ray_origin-sphere_origin)*ray_dir
+        c = ||ray_origin-sphere_origin||^2 - sphere_radius^2
+    */
+
+    // Assumes ray_dir is normalized
+    float a = 1;
+    float b = 2*dot(ray_origin-sphere_origin, ray_dir);
+    float c = dot(ray_origin-sphere_origin, ray_origin-sphere_origin) - sphere_radius*sphere_radius;
+
+    float inside_sqrt = b*b - 4*a*c;
+    if (inside_sqrt <= 0) {
+        intersected = false;
+        return FAR_PLANE;
+    }
+    intersected = true;
+    // Modified quadradic equation to avoid loss of precision
+    return 2*c / (-b + sqrt(inside_sqrt));
 }
 
 vec4 barycentric_coordinates(vec3 point, vec3 tri0, vec3 tri1, vec3 tri2) {
@@ -284,6 +372,28 @@ Vertex cast_ray(vec3 ray_origin, vec3 ray_dir, out int mesh_index) {
     return cast_ray(ray_origin, ray_dir, NEAR_PLANE, FAR_PLANE, mesh_index);
 }
 
+int cast_ray_for_lights(vec3 ray_origin, vec3 ray_dir, float near_plane, float far_plane, out float depth) {
+    int closest_light_index = -1;
+    float closest_depth = far_plane;
+    for (uint i=0; i<nr_lights; i++) {
+        Light current_light = lights[i];
+        if (current_light.visibility == 1) {
+            bool intersected;
+            float current_depth = ray_sphere_int(ray_origin, ray_dir, current_light.position, 0.1f, intersected);
+            if (intersected && current_depth > near_plane && current_depth < closest_depth) {
+                closest_depth = current_depth;
+                closest_light_index = int(i);
+            }
+        }
+    }
+    depth = closest_depth;
+    return closest_light_index;
+}
+
+int cast_ray_for_lights(vec3 ray_origin, vec3 ray_dir, out float depth) {
+    return cast_ray_for_lights(ray_origin, ray_dir, NEAR_PLANE, FAR_PLANE, depth);
+}
+
 
 /* ~=~=~=~=~=~=~= Lighting Calculations =~=~=~=~=~=~=~ */
 
@@ -338,28 +448,25 @@ vec3 cook_torrance_BRDF(vec3 view, vec3 normal, vec3 light, MaterialData materia
 
 // Lights
 
-struct Light {
-    vec3 direction;
-    vec3 radiance;
-    float ambient_multiplier;
-};
-
-uniform Light sunlight = Light(normalize(vec3(0.4f, -1.0f, -0.4f)), vec3(3.0f), 1.0f);
-// uniform Light sunlight = Light(normalize(vec3(0.3f, -0.3f, -1.0f)), vec3(3.0f), 0.3f);
+// uniform LightData sunlight = LightData(normalize(vec3(0.4f, -1.0f, -0.4f)), vec3(3.0f), 1.0f);
+// uniform LightData sunlight = LightData(normalize(vec3(0.3f, -0.3f, -1.0f)), vec3(3.0f), 0.3f);
 
 #define BIAS 0.0001f
 #define SHADOWS 1
 vec3 calculate_light(vec3 position, vec3 normal, vec3 ray_dir, MaterialData material, Light light) {
+    LightData light_data = get_light_data(light, position);
     #if SHADOWS
         int mesh_index;
-        cast_ray(position, -light.direction, BIAS, FAR_PLANE, mesh_index);
+        float light_distance = light_data.light_distance;
+        if (light_distance < -EPSILON) light_distance = FAR_PLANE;
+        cast_ray(position, -light_data.direction, BIAS, light_distance, mesh_index);
         if (mesh_index != -1) {
-            return material.albedo.rgb * material.AO * light.ambient_multiplier;
+            return material.albedo.rgb * material.AO * light_data.radiance * light_data.ambient_multiplier;
         }
     #endif
-    vec3 color = cook_torrance_BRDF(-ray_dir, normal, -light.direction, material);
-    color *= light.radiance * max(dot(normal, -light.direction), 0.0f);
-    color += material.albedo.rgb * material.AO * light.ambient_multiplier;
+    vec3 color = cook_torrance_BRDF(-ray_dir, normal, -light_data.direction, material);
+    color *= light_data.radiance * max(dot(normal, -light_data.direction), 0.0f);
+    color += material.albedo.rgb * material.AO * light_data.radiance * light_data.ambient_multiplier;
     return color;
 }
 
@@ -370,11 +477,20 @@ vec4 trace(vec3 ray_origin, vec3 ray_dir) {
     ray_dir = normalize(ray_dir);
     int mesh_index;
     Vertex vert = cast_ray(ray_origin, ray_dir, mesh_index);
+
+    // Check for ray intersection w/ light (if so, terminate early to avoid unnecessary calculations)
+    float vertex_depth = length(vert.position.xyz-ray_origin);
+    float lights_depth;
+    int light_index = cast_ray_for_lights(ray_origin, ray_dir, lights_depth);
+    if (light_index != -1 && (lights_depth <= vertex_depth || mesh_index == -1)) {
+        return vec4(lights[light_index].radiance, 1.0f);
+    }
+
+    if (mesh_index == -1) return vec4(0.0f,1.0f,0.0f,1.0f);
+
     vert.normal = vec4(normalize(vert.normal.xyz), 0.0f);
     float normal_sign = sign(dot(vert.normal.xyz, -ray_dir));
     vert.normal *= normal_sign;
-
-    if (mesh_index == -1) return vec4(0.0f,1.0f,0.0f,1.0f);
 
     Material material = materials[meshes[mesh_index].material_index];
     if (material.normal_ti != -1) {
@@ -389,9 +505,14 @@ vec4 trace(vec3 ray_origin, vec3 ray_dir) {
     }
 
     MaterialData mat = get_material_data(material, vert.tex_coord);
-    vec3 color = calculate_light(vert.position.rgb, vert.normal.xyz, ray_dir, mat, sunlight);
+    // vec3 color = calculate_light(vert.position.rgb, vert.normal.xyz, ray_dir, mat, Light(vec3(0.0f), 0, vec3(0.4f, -1.0f, -0.4f), 1, vec3(3.0f), 1.0f));
+    vec3 color = vec3(0.0f);
+    for (uint i=0; i<nr_lights; i++) {
+        color += calculate_light(vert.position.rgb, vert.normal.xyz, ray_dir, mat, lights[i]);
+    }
     return vec4(color, 1.0f);
 }
+
 
 layout (local_size_x = 8, local_size_y = 8) in;
 

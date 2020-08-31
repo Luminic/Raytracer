@@ -8,6 +8,8 @@
 #include <memory>
 
 #include <scene/Mesh.hpp>
+#include <scene/lights/SunLight.hpp>
+#include <scene/lights/PointLight.hpp>
 
 MainWindow::MainWindow(QWidget* parent) :
     QMainWindow(parent),
@@ -119,9 +121,9 @@ void MainWindow::initialization(Rt::OpenGLFunctions* gl) {
     );
     mesh1->set_material(metal_material);
 
-    std::shared_ptr<Rt::Node> node1 = std::make_shared<Rt::Node>(mesh1);
-    node1->set_translation(glm::vec3(2.0f,0.0f,0.0f));
-    node1->set_rotation(glm::vec3(3.14f, 1.507f, 0.0f));
+    std::shared_ptr<Rt::Node> node2 = std::make_shared<Rt::Node>(mesh1);
+    node2->set_translation(glm::vec3(2.0f,0.0f,0.0f));
+    node2->set_rotation(glm::vec3(3.14f, 1.507f, 0.0f));
 
     std::shared_ptr<Rt::Mesh> mesh2 = std::make_shared<Rt::Mesh>(
         std::vector<Rt::Vertex>{
@@ -134,7 +136,15 @@ void MainWindow::initialization(Rt::OpenGLFunctions* gl) {
         }
     );
     mesh2->set_material(floor_material);
+    node2->add_mesh(mesh2);
 
-    scene->add_node(node1);
+    scene->add_node(node2);
     scene->add_mesh(mesh2);
+
+    Rt::Node* sun = new Rt::SunLight(glm::vec3(2.0f));
+    sun->set_rotation(glm::vec3(0.6f,0.0f,0.55f));
+    scene->add_node(std::shared_ptr<Rt::Node>(sun));
+
+    Rt::Node* pl = new Rt::PointLight(glm::vec3(1.0f,1.0f,-1.0f), glm::vec3(4.0f));
+    scene->add_node(std::shared_ptr<Rt::Node>(pl));
 }

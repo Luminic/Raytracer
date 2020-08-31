@@ -51,24 +51,20 @@ namespace Rt {
     }
 
 
-    void Mesh::as_byte_array(unsigned char byte_array[mesh_size_in_opengl], glm::mat4 transformation, Index vertex_offset, Index index_offset, MaterialIndex material_index) const {
+    void Mesh::as_byte_array(unsigned char byte_array[mesh_size_in_opengl], const glm::mat4& transformation, Index vertex_offset, Index index_offset, MaterialIndex material_index) const {
         unsigned char const* tmp = reinterpret_cast<unsigned char const*>(&transformation);
         std::copy(tmp, tmp+64, byte_array);
 
-        // qDebug() << "vertex_offset" << vertex_offset;
         tmp = reinterpret_cast<unsigned char const*>(&vertex_offset);
         std::copy(tmp, tmp+4, byte_array+64);
 
-        // qDebug() << "index_offset" << index_offset;
         tmp = reinterpret_cast<unsigned char const*>(&index_offset);
         std::copy(tmp, tmp+4, byte_array+68);
 
         Index nr_indices = indices.size();
-        // qDebug() << "nr_indices" << nr_indices;
         tmp = reinterpret_cast<unsigned char const*>(&nr_indices);
         std::copy(tmp, tmp+4, byte_array+72);
 
-        // qDebug() << "mat_ind" << material_index;
         tmp = reinterpret_cast<unsigned char const*>(&material_index);
         std::copy(tmp, tmp+4, byte_array+76);
     }

@@ -1,5 +1,8 @@
 #include "Renderer.hpp"
+
 #include <QDebug>
+
+#include "scene/lights/AbstractLight.hpp"
 
 namespace Rt {
 
@@ -91,6 +94,11 @@ namespace Rt {
         gl->glNamedBufferData(material_ssbo, 0, nullptr, GL_STREAM_DRAW);
         material_ssbo_size = 0;
 
+        gl->glCreateBuffers(1, &light_ssbo);
+        gl->glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, light_ssbo);
+        gl->glNamedBufferData(light_ssbo, 0, nullptr, GL_STREAM_DRAW);
+        light_ssbo_size = 0;
+
         // We need to create the texture here just in case there are no material textures
         gl->glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &material_texture_array);
         nr_material_textures = 0;
@@ -102,6 +110,7 @@ namespace Rt {
 
             dynamic_vertices.clear();
             dynamic_indices.clear();
+            lights.clear();
             meshes = scene->get_static_meshes();
             traverse_node_tree(scene);
 
@@ -111,6 +120,8 @@ namespace Rt {
             dynamic_index_ssbo_size = dynamic_indices.size();
             gl->glNamedBufferData(mesh_ssbo, meshes.size(), meshes.data(), GL_STREAM_DRAW);
             mesh_ssbo_size = meshes.size() / mesh_size_in_opengl;
+            gl->glNamedBufferData(light_ssbo, lights.size(), lights.data(), GL_STREAM_DRAW);
+            light_ssbo_size = lights.size() / light_size_in_opengl;
 
             // Allocate enough space for the vertex buffer
             vertex_ssbo_size = dynamic_vertex_ssbo_size+static_vertex_ssbo_size;
@@ -189,6 +200,7 @@ namespace Rt {
             render_shader.set_uint("nr_dynamic_indices", dynamic_index_ssbo_size);
             render_shader.set_uint("nr_meshes", mesh_ssbo_size);
             render_shader.set_uint("nr_materials", material_ssbo_size);
+            render_shader.set_uint("nr_lights", light_ssbo_size);
 
             gl->glActiveTexture(GL_TEXTURE0);
             gl->glBindTexture(GL_TEXTURE_2D_ARRAY, material_texture_array);
@@ -240,6 +252,15 @@ namespace Rt {
     void Renderer::traverse_node_tree(Node* node, glm::mat4 transformation) {
         transformation *= node->get_transformation();
 
+        // Check node type
+        if (node->get_node_type() == Node::NodeType::LIGHT) {
+            size_t light_offset = lights.size();
+            lights.resize(light_offset + light_size_in_opengl);
+            AbstractLight* light = reinterpret_cast<AbstractLight*>(node);
+            light->as_byte_array(lights.data()+light_offset, transformation);
+        }
+
+        // Add mesh data to buffers
         MaterialManager& material_manager = scene->get_material_manager();
         const std::vector<std::shared_ptr<Mesh>>& node_meshes = node->get_child_meshes();
         MeshIndex mesh_offset = meshes.size();
@@ -267,6 +288,7 @@ namespace Rt {
             mesh_offset += mesh_size_in_opengl;
         }
 
+        // Recursively loop through child nodes
         const std::vector<std::shared_ptr<Node>>& node_child_nodes = node->get_child_nodes();
         for (auto n : node_child_nodes) {
             traverse_node_tree(n.get(), transformation);

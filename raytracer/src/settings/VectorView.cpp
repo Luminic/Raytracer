@@ -1,5 +1,6 @@
 #include "VectorView.hpp"
 
+#include <QSizePolicy>
 #include <QDebug>
 
 #include <algorithm>
@@ -10,6 +11,8 @@ namespace Rt {
     VectorView::VectorView(int n, QBoxLayout::Direction dir, QWidget* parent) : QWidget(parent), n(n) {
         Q_ASSERT_X(n >= 1, "VecSpinBox Initialization", "Cannot have a zero-sized VecSpinBoxes");
         data = new float[n];
+
+        setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
         QBoxLayout* layout = new QBoxLayout(dir, this);
 

@@ -486,7 +486,7 @@ vec4 trace(vec3 ray_origin, vec3 ray_dir) {
         return vec4(lights[light_index].radiance, 1.0f);
     }
 
-    if (mesh_index == -1) return vec4(0.0f,1.0f,0.0f,1.0f);
+    if (mesh_index == -1) return vec4(0.0f,0.0f,0.0f,1.0f);
 
     vert.normal = vec4(normalize(vert.normal.xyz), 0.0f);
     float normal_sign = sign(dot(vert.normal.xyz, -ray_dir));
